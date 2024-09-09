@@ -1,0 +1,13 @@
+../Core/Programmer/target/Target.c:44:6:Option_Test	1
+../Core/Programmer/target/Target.c:76:6:Target_MainLoop	6
+../Core/Programmer/target/Target.c:121:22:Target_Connect	3
+../Core/Programmer/target/Target.c:153:22:Target_Program	8
+../Core/Programmer/target/Target.c:227:22:Target_MassErase	2
+../Core/Programmer/target/Target.c:247:13:Target_Classify	15
+../Core/Programmer/target/Target.c:316:6:Target_ProgramCallback_STM32C0	7
+../Core/Programmer/target/Target.c:357:6:Target_VerifyCallback	5
+../Core/Programmer/target/Target.c:389:22:Target_Verfify	7
+../Core/Programmer/target/Target.c:451:6:Target_BuutonPush	2
+../Core/Programmer/target/Target.c:463:13:Target_ErrorHandle	2
+../Core/Programmer/target/Target.c:474:6:Target_LedSet	1
+../Core/Programmer/target/Target.c:479:1:__io_putchar	1

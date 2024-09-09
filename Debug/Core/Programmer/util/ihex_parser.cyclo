@@ -1,0 +1,4 @@
+../Core/Programmer/util/ihex_parser.c:47:16:HexToDec	7
+../Core/Programmer/util/ihex_parser.c:129:6:ihex_reset_state	1
+../Core/Programmer/util/ihex_parser.c:137:6:ihex_set_callback_func	1
+../Core/Programmer/util/ihex_parser.c:142:6:ihex_parser	31
