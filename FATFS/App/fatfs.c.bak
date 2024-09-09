@@ -15,7 +15,6 @@
   *
   ******************************************************************************
   */
-#include <stdio.h>
 /* USER CODE END Header */
 #include "fatfs.h"
 
@@ -34,17 +33,7 @@ void MX_FATFS_Init(void)
   retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
 
   /* USER CODE BEGIN Init */
-  if(retSD != FR_OK)
-  {
-  	printf("FATFS_LinkDriver() failed.\n");
-  	Error_Handler();
-  }
-
-  retSD = f_mount(&SDFatFS, (TCHAR const*)SDPath, 0);
-  if(retSD != FR_OK)
-  {
-  	Error_Handler();
-  }
+  /* additional user code for init */
   /* USER CODE END Init */
 }
 

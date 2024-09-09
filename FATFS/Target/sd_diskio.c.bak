@@ -69,7 +69,6 @@
 */
 /* USER CODE BEGIN enableScratchBuffer */
 /* #define ENABLE_SCRATCH_BUFFER */
-extern uint32_t  usbd_WriteStatus, usbd_ReadStatus;
 /* USER CODE END enableScratchBuffer */
 
 /* Private variables ---------------------------------------------------------*/
@@ -477,8 +476,6 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 
 /* USER CODE BEGIN callbackSection */
 /* can be used to modify / following code or add new code */
-#define BLOCK_DEFUALT_BSP_CALLBACK
-#ifndef BLOCK_DEFUALT_BSP_CALLBACK
 /* USER CODE END callbackSection */
 /**
   * @brief Tx Transfer completed callbacks
@@ -502,30 +499,6 @@ void BSP_SD_ReadCpltCallback(void)
 }
 
 /* USER CODE BEGIN ErrorAbortCallbacks */
-#endif
-
-/**
-  * @brief Tx Transfer completed callbacks
-  * @param hsd: SD handle
-  * @retval None
-  */
-void BSP_SD_WriteCpltCallback(void)
-{
-
-  WriteStatus = 1;
-  usbd_WriteStatus = 1;
-}
-
-/**
-  * @brief Rx Transfer completed callbacks
-  * @param hsd: SD handle
-  * @retval None
-  */
-void BSP_SD_ReadCpltCallback(void)
-{
-  ReadStatus = 1;
-  usbd_ReadStatus = 1;
-}
 /*
 ==============================================================================================
   depending on the SD_HAL_Driver version, either the HAL_SD_ErrorCallback() or HAL_SD_AbortCallback()

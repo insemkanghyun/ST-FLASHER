@@ -71,8 +71,8 @@ all: main-build
 main-build: ST-FLASHER.elf secondary-outputs
 
 # Tool invocations
-ST-FLASHER.elf ST-FLASHER.map: $(OBJS) $(USER_OBJS) C:\Users\kangh\OneDrive\Documents\GitHub\ST-FLASHER\ST-Flasher\STM32F427VITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "ST-FLASHER.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\kangh\OneDrive\Documents\GitHub\ST-FLASHER\ST-Flasher\STM32F427VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ST-FLASHER.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+ST-FLASHER.elf ST-FLASHER.map: $(OBJS) $(USER_OBJS) E:\Github\ST-Flasher\ST-FLASHER\STM32F427VITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "ST-FLASHER.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Github\ST-Flasher\ST-FLASHER\STM32F427VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ST-FLASHER.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

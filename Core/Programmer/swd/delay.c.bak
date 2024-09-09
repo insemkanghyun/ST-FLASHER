@@ -32,7 +32,7 @@
  ******************************************************************************/
 #include "main.h"
 
-extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim1;
 
 /**********************************************************
  * Enables clocks used for delay functions.
@@ -61,7 +61,7 @@ void delayMs(int ms)
  **********************************************************/
 void delayUs(int us)
 {
-	__HAL_TIM_SET_COUNTER(&htim2,0);  // set the counter value a 0
-	while (__HAL_TIM_GET_COUNTER(&htim2) < (us-1));  // wait for the counter to reach the us input in the parameter
+	__HAL_TIM_SET_COUNTER(&htim1,0);  // set the counter value a 0
+	while (__HAL_TIM_GET_COUNTER(&htim1) < (us-1));  // wait for the counter to reach the us input in the parameter
 }
   
