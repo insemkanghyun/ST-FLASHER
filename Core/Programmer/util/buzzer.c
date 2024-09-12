@@ -2,13 +2,11 @@
 #include "buzzer.h"
 #include "stm32f4xx_hal.h"
 
-
-
 extern TIM_HandleTypeDef htim1;
-
-
-
 volatile BuzzerState state = BUZZER_BOOT;
+
+#define DEFAULT_FREQ 12000
+
 
 
 static void SetBuzzerFrequency(uint32_t frequency);
@@ -57,7 +55,7 @@ void SetBuzzerFrequency(uint32_t frequency) {
 void PlayBootSound(void)
 {
 		/* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(500);
@@ -69,7 +67,7 @@ void PlayBootSound(void)
 void PlayDuringProgrammingSound(void)
 {
 		/* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(150);
@@ -81,7 +79,7 @@ void PlayDuringProgrammingSound(void)
 void PlayProgrammingCompleteSound(void)
 {
 		/* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(300);
@@ -93,7 +91,7 @@ void PlayProgrammingCompleteSound(void)
     HAL_Delay(300);
 
     /* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(300);
@@ -107,7 +105,7 @@ void PlayProgrammingFailedSound(void){
     for (uint8_t i = 0; i < 6; i++)
     {
     		/* Set Frequency */
-        SetBuzzerFrequency(5000);
+        SetBuzzerFrequency(DEFAULT_FREQ);
 
         /* Set Duration */
         HAL_Delay(150);

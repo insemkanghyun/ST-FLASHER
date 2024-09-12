@@ -265,10 +265,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	/* SWD DAP usDelay(): TIM1 */
-	HAL_TIM_Base_Start(&htim1);
+	HAL_TIM_Base_Start(&htim2);
 
 	/* buzzer sound timer pwm start: TIM2 */
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
 
 	/* Set programmer LED & Buzzer state */
 	Target_LedSet(TARGET_LED_STAT_BOOT);
@@ -540,7 +540,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 921600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -602,6 +602,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, SPI_CS_Pin|TARGET_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(USB_VDD_EN_GPIO_Port, USB_VDD_EN_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SWD_CLK_Pin|SWD_IO_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : LED_RED_Pin LED_ORANGE_Pin LED_GREEN_Pin */
@@ -636,11 +639,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : USB_VDD_EN_Pin */
+  GPIO_InitStruct.Pin = USB_VDD_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(USB_VDD_EN_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : SWD_CLK_Pin SWD_IO_Pin */
   GPIO_InitStruct.Pin = SWD_CLK_Pin|SWD_IO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
