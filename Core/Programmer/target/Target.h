@@ -95,6 +95,10 @@ Target_StatusTypeDef Target_Connect(void);
 Target_StatusTypeDef Target_MassErase(void);
 Target_StatusTypeDef Target_Program(void);
 Target_StatusTypeDef Target_Verfify(void);
+Target_StatusTypeDef Target_Option_Program(void);
+Target_StatusTypeDef Target_Proteciton_Unlock(void);
+Target_StatusTypeDef Target_Protection_Lock(void);
+
 void Target_MainLoop(void);
 void Target_BuutonPush(void);
 void Target_LedSet(LedStatus status);

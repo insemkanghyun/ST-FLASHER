@@ -340,4 +340,3 @@ Target_StatusTypeDef Stm32c0_Flash_OB_Program(uint32_t RDPLevel)
 
 	return status;
 }
-

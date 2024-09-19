@@ -31,36 +31,63 @@ void LED_Handler(void)
     static uint32_t counter = 0;
 
     counter += SYS_TICK_PERIOD_MS;
+    static uint8_t step = 0;  // LED 순차적 제어를 위한 단계 변수
+
 
     switch (currentState) {
         case TARGET_LED_STAT_BOOT:
+#if 0
             if (counter % LED_TOGGLE_INTERVAL == 0) {
                 LED_Toggle(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
                 LED_Toggle(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
                 LED_Toggle(LED_RED_GPIO_Port, LED_RED_Pin);
             }
             break;
+#endif
+            if (counter >= LED_TOGGLE_INTERVAL && step == 0) {
+            	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);   // 초록색 켜기
+            	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+            	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+            	step++;
+            	counter = 0;  // 카운터 초기화
+            }
+            if (counter >= LED_TOGGLE_INTERVAL && step == 1) {
+            	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+            	LED_On(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);  // 주황색 켜기
+            	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+            	step++;
+            	counter = 0;
+            }
+            if (counter >= LED_TOGGLE_INTERVAL && step == 2) {
+            	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+            	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+            	LED_On(LED_RED_GPIO_Port, LED_RED_Pin);        // 빨간색 켜기
+            	step++;
+            	counter = 0;
+            }
+            if (counter >= LED_TOGGLE_INTERVAL && step == 3) {
+            	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);    // 초록색 켜고 나머지 끄기
+            	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+            	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+            	step++;  // 마지막 단계로 진행
+            }
+            break;
         case TARGET_LED_STAT_PROGRAMMING:
             if (counter % 100 == 0) { // Fast toggle rate
                 LED_Toggle(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
             }
-            if (counter % 500 == 0) { // Red LED ON
-                LED_On(LED_RED_GPIO_Port, LED_RED_Pin);
-            } else {
-                LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
-            }
+          	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+          	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
             break;
         case TARGET_LED_STAT_COMPLETE:
-            LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-            LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-            LED_On(LED_RED_GPIO_Port, LED_RED_Pin);
+        	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+        	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+        	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
             break;
         case TARGET_LED_STAT_FAILED:
-            if (counter % 500 == 0) {
-                LED_Toggle(LED_RED_GPIO_Port, LED_RED_Pin);
-            }
-            LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-            LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+        	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+          LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+          LED_On(LED_RED_GPIO_Port, LED_RED_Pin);
             break;
         default:
             break;

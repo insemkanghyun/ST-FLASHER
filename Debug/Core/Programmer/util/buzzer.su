@@ -1,1 +1,1 @@
-../Core/Programmer/util/buzzer.c:19:6:Buzzer_SetState	24	static
+../Core/Programmer/util/buzzer.c:19:6:Buzzer_SetState	16	static

@@ -41,7 +41,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define ST_FLASHER_VERSION 20240812
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -274,6 +274,7 @@ int main(void)
 	Target_LedSet(TARGET_LED_STAT_BOOT);
 	Buzzer_SetState(BUZZER_BOOT);
 
+	printf("ST-Flash Boot OK! v%d\n", ST_FLASHER_VERSION);
 	/* w25 serial flash test */
 	//w25_test();
   /* USER CODE END 2 */
@@ -596,7 +597,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, LED_RED_Pin|LED_ORANGE_Pin|LED_GREEN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, SPI_CS_Pin|TARGET_RST_Pin, GPIO_PIN_RESET);
@@ -607,8 +608,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SWD_CLK_Pin|SWD_IO_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : LED_RED_Pin LED_ORANGE_Pin LED_GREEN_Pin */
-  GPIO_InitStruct.Pin = LED_RED_Pin|LED_ORANGE_Pin|LED_GREEN_Pin;
+  /*Configure GPIO pins : LED_GREEN_Pin LED_ORANGE_Pin LED_RED_Pin */
+  GPIO_InitStruct.Pin = LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

@@ -89,20 +89,11 @@ void PlayProgrammingCompleteSound(void)
 
     /* Set Duration */
     HAL_Delay(300);
-
-    /* Set Frequency */
-    SetBuzzerFrequency(DEFAULT_FREQ);
-
-    /* Set Duration */
-    HAL_Delay(300);
-
-    /* Buzzer Off */
-    SetBuzzerFrequency(0);
 }
 
 void PlayProgrammingFailedSound(void){
 
-    for (uint8_t i = 0; i < 6; i++)
+    for (uint8_t i = 0; i < 5; i++)
     {
     		/* Set Frequency */
         SetBuzzerFrequency(DEFAULT_FREQ);

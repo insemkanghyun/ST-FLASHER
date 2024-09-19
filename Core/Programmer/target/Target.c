@@ -19,7 +19,7 @@
 
 //#define printf(...) //for printf remove
 
-Target_InfoTypeDef target;
+volatile Target_InfoTypeDef target;
 volatile uint8_t u8_ButtonPushed = 0;
 volatile uint8_t u8_ButtonLock = 0;
 int u32_StartTime = 0;
@@ -40,39 +40,6 @@ static bool (*Target_ProgramCallback[])(uint32_t addr, const uint8_t *buf, uint8
 					TO_BE_IMPLEMENT_CALLBACK,\
 					Target_ProgramCallback_STM32C0};
 
-uint32_t value = 0;
-void Option_Test(void)
-{
-#if 0
-	/* Option Byte Program Test Section Start*/
-	  	value = readMem(STM32C0_FLASH_OPTION);
-	  	printf("Start OB_USER = 0x%08"PRIX32"\n", value);
-
-	  	status = Stm32c0_Flash_Unlock();
-	  	Target_ErrorHandle(status, "Stm32c0_Flash_Unlock");
-	  	status = Stm32c0_Flash_OB_Unlock();
-	  	Target_ErrorHandle(status, "Stm32c0_Flash_OB_Unlock");
-	  	status = Stm32c0_Flash_OB_Program(STM32C0_OB_RDP_LEVEL_0);
-	  	Target_ErrorHandle(status, "Stm32c0_Flash_OB_Program");
-
-	  	Stm32c0_Flash_OB_Launch();
-	  	printf("OB Launch\n");
-
-	  	status = Target_Connect();
-	  	Target_ErrorHandle(status, "Target Connect Error");
-
-	  	Stm32c0_Flash_OB_Lock();
-	  	Target_ErrorHandle(status, "Stm32c0_Flash_OB_Lock");
-	  	status = Stm32c0_Flash_Lock();
-	  	Target_ErrorHandle(status, "Stm32c0_Flash_Lock");
-
-	  	value = readMem(STM32C0_FLASH_OPTION_OPTR);
-	  	printf("End OB_USER = 0x%08"PRIX32"\n", value);
-	  	/* Option Byte Program Test Section End */
-
-#endif
-}
-
 void Target_MainLoop(void)
 {
 	Target_StatusTypeDef status = TARGET_ERROR;
@@ -86,30 +53,40 @@ void Target_MainLoop(void)
 
     /* Reset button status for next programming */
   	u8_ButtonPushed = 0;
-  	printf("Programmer Button Pushed\n");
 
   	/* Set button lock flag for block when target flash operation  */
   	u8_ButtonLock = 1;
-  	printf("Programmer Button Locked\n");
 
   	/* Target flash operation */
   	status = Target_Connect();
   	Target_ErrorHandle(status, "Target Connect Error");
   	if(status != TARGET_OK) return;
+
+  	status = Target_Proteciton_Unlock();
+  	Target_ErrorHandle(status, "Target Protection Unlock Error");
+  	if(status != TARGET_OK) return;
+
   	status = Target_MassErase();
   	Target_ErrorHandle(status, "Target MassErase Error");
   	if(status != TARGET_OK) return;
+
   	status = Target_Program();
   	Target_ErrorHandle(status, "Target Program Error");
   	if(status != TARGET_OK) return;
+
   	status = Target_Verfify();
   	Target_ErrorHandle(status, "Target Verify Error");
   	if(status != TARGET_OK) return;
+
+  	status = Target_Protection_Lock();
+  	Target_ErrorHandle(status, "Target Protection Lock Error");
+  	if(status != TARGET_OK) return;
+
   	printf("Target program completed\n");
 
     /* Target flash operation completed & button lock flag release  */
     u8_ButtonLock = 0;
-    printf("Programmer Button Unlocked\n");
+
 
     u32_ElasedTime = HAL_GetTick() - u32_StartTime;
     printf("Total Elapsed Programming Time: %d ms\n\n", u32_ElasedTime);
@@ -179,8 +156,9 @@ Target_StatusTypeDef Target_Program(void)
     	printf("f_stat error\n");
     	return TARGET_ERROR;
     }
-    printf("File name: %s\n", fileInfo.fname);
-    printf("File size: %lu bytes\n", fileInfo.fsize);
+    printf("-File name: %s\n", fileInfo.fname);
+    printf("-File size: %lu bytes\n", fileInfo.fsize);
+
 
 
     while (1)
@@ -221,6 +199,8 @@ Target_StatusTypeDef Target_Program(void)
     		}
     	}
    }
+
+
     return TARGET_OK;
 }
 
@@ -447,6 +427,85 @@ Target_StatusTypeDef Target_Verfify(void)
   }
   return TARGET_OK;
 }
+
+Target_StatusTypeDef Target_Proteciton_Unlock(void)
+{
+	Target_StatusTypeDef status = TARGET_ERROR;
+	uint32_t Option_Status = 0;
+
+	printf("Target protection check before flash programming.\n");
+
+	switch(target.TargetFamily)
+	{
+		case TARGET_STM32C0:
+			/* Read option byte */
+			Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR) & STM32C0_FLASH_OPTR_RDP_Msk;
+			printf("Current target RDP = 0x%02"PRIX32"\n", Option_Status);
+
+			/* If option byte Lv1 */
+			if(Option_Status == STM32C0_OB_RDP_LEVEL_1)
+			{
+				printf("Configure target RDP Level-1(0xBB) to Level-2(0xAA) for flash programming.\n");
+				/* Unlock */
+				Stm32c0_Flash_Unlock();
+				Stm32c0_Flash_OB_Unlock();
+				Stm32c0_Flash_OB_Program(STM32C0_OB_RDP_LEVEL_0);
+
+				printf("RDP programming OK. Option Byte launch will generate 'system reset'\n");
+				Stm32c0_Flash_OB_Launch();
+				Target_Connect();
+				Stm32c0_Flash_OB_Lock();
+				Stm32c0_Flash_Lock();
+
+				Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR);
+				printf("Modified RDP = 0x%02"PRIX32"\n", Option_Status & STM32C0_FLASH_OPTR_RDP_Msk);
+			}
+			else if(Option_Status == STM32C0_OB_RDP_LEVEL_0)
+			{
+				printf("Not Locked chip\n");
+			}
+			else //if(Option_Status == STM32C0_OB_RDP_LEVEL_2)
+			{
+				printf("Locked chip or Error, it cannot program.\n");
+				return TARGET_ERROR;
+			}
+			break;
+		default:
+			break;
+	}
+	return TARGET_OK;
+}
+
+Target_StatusTypeDef Target_Protection_Lock(void)
+{
+	Target_StatusTypeDef status = TARGET_ERROR;
+	uint32_t Option_Status = 0;
+
+	printf("Target protection configure.\n");
+
+	switch(target.TargetFamily)
+	{
+		case TARGET_STM32C0:
+				printf("Configure target RDP Level-2(0xAA) to Level-1(0xBB) for flash protection.\n");
+				Stm32c0_Flash_Unlock();
+				Stm32c0_Flash_OB_Unlock();
+				Stm32c0_Flash_OB_Program(STM32C0_OB_RDP_LEVEL_1);
+				Stm32c0_Flash_OB_Launch();
+				Target_Connect();
+				Stm32c0_Flash_OB_Lock();
+				Stm32c0_Flash_Lock();
+
+				Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR);
+				printf("Modified RDP = 0x%02"PRIX32"\n", Option_Status & STM32C0_FLASH_OPTR_RDP_Msk);
+
+			break;
+		default:
+			break;
+	}
+	return TARGET_OK;
+}
+
+
 
 void Target_BuutonPush(void)
 {

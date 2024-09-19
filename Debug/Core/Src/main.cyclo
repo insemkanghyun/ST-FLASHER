@@ -3,6 +3,6 @@
 ../Core/Src/main.c:125:9:check_buffer	10
 ../Core/Src/main.c:155:10:get_sum	3
 ../Core/Src/main.c:163:6:w25_test	21
-../Core/Src/main.c:672:6:Error_Handler	1
-../Core/Src/main.c:297:6:SystemClock_Config	2
+../Core/Src/main.c:673:6:Error_Handler	1
+../Core/Src/main.c:298:6:SystemClock_Config	2
 ../Core/Src/main.c:232:5:main	11
