@@ -69,7 +69,6 @@ void Error_Handler(void);
 #define SPI_CS_GPIO_Port GPIOA
 #define PROGRAM_BTN_Pin GPIO_PIN_0
 #define PROGRAM_BTN_GPIO_Port GPIOB
-#define PROGRAM_BTN_EXTI_IRQn EXTI0_IRQn
 #define OPTION_PROG_DIP_SW_Pin GPIO_PIN_1
 #define OPTION_PROG_DIP_SW_GPIO_Port GPIOB
 #define BEEP_Pin GPIO_PIN_13

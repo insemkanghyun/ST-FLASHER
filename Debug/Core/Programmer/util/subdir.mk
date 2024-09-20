@@ -5,18 +5,21 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Core/Programmer/util/button.c \
 ../Core/Programmer/util/buzzer.c \
 ../Core/Programmer/util/ihex_parser.c \
 ../Core/Programmer/util/led.c \
 ../Core/Programmer/util/w25qxx.c 
 
 OBJS += \
+./Core/Programmer/util/button.o \
 ./Core/Programmer/util/buzzer.o \
 ./Core/Programmer/util/ihex_parser.o \
 ./Core/Programmer/util/led.o \
 ./Core/Programmer/util/w25qxx.o 
 
 C_DEPS += \
+./Core/Programmer/util/button.d \
 ./Core/Programmer/util/buzzer.d \
 ./Core/Programmer/util/ihex_parser.d \
 ./Core/Programmer/util/led.d \
@@ -30,7 +33,7 @@ Core/Programmer/util/%.o Core/Programmer/util/%.su Core/Programmer/util/%.cyclo:
 clean: clean-Core-2f-Programmer-2f-util
 
 clean-Core-2f-Programmer-2f-util:
-	-$(RM) ./Core/Programmer/util/buzzer.cyclo ./Core/Programmer/util/buzzer.d ./Core/Programmer/util/buzzer.o ./Core/Programmer/util/buzzer.su ./Core/Programmer/util/ihex_parser.cyclo ./Core/Programmer/util/ihex_parser.d ./Core/Programmer/util/ihex_parser.o ./Core/Programmer/util/ihex_parser.su ./Core/Programmer/util/led.cyclo ./Core/Programmer/util/led.d ./Core/Programmer/util/led.o ./Core/Programmer/util/led.su ./Core/Programmer/util/w25qxx.cyclo ./Core/Programmer/util/w25qxx.d ./Core/Programmer/util/w25qxx.o ./Core/Programmer/util/w25qxx.su
+	-$(RM) ./Core/Programmer/util/button.cyclo ./Core/Programmer/util/button.d ./Core/Programmer/util/button.o ./Core/Programmer/util/button.su ./Core/Programmer/util/buzzer.cyclo ./Core/Programmer/util/buzzer.d ./Core/Programmer/util/buzzer.o ./Core/Programmer/util/buzzer.su ./Core/Programmer/util/ihex_parser.cyclo ./Core/Programmer/util/ihex_parser.d ./Core/Programmer/util/ihex_parser.o ./Core/Programmer/util/ihex_parser.su ./Core/Programmer/util/led.cyclo ./Core/Programmer/util/led.d ./Core/Programmer/util/led.o ./Core/Programmer/util/led.su ./Core/Programmer/util/w25qxx.cyclo ./Core/Programmer/util/w25qxx.d ./Core/Programmer/util/w25qxx.o ./Core/Programmer/util/w25qxx.su
 
 .PHONY: clean-Core-2f-Programmer-2f-util
 

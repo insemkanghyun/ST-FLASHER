@@ -13,6 +13,7 @@
 #include "stm32c0_flash.h"
 #include "led.h"
 #include "buzzer.h"
+#include "button.h"
 
 #define PRINTF_REDIRECTION	int __io_putchar(int ch)
 #define TO_BE_IMPLEMENT_CALLBACK 0
@@ -20,8 +21,6 @@
 //#define printf(...) //for printf remove
 
 volatile Target_InfoTypeDef target;
-volatile uint8_t u8_ButtonPushed = 0;
-volatile uint8_t u8_ButtonLock = 0;
 int u32_StartTime = 0;
 int u32_ElasedTime = 0;
 extern UART_HandleTypeDef huart1;
@@ -40,6 +39,7 @@ static bool (*Target_ProgramCallback[])(uint32_t addr, const uint8_t *buf, uint8
 					TO_BE_IMPLEMENT_CALLBACK,\
 					Target_ProgramCallback_STM32C0};
 
+#if 0 //backup
 void Target_MainLoop(void)
 {
 	Target_StatusTypeDef status = TARGET_ERROR;
@@ -94,6 +94,54 @@ void Target_MainLoop(void)
     Buzzer_SetState(BUZZER_PROG_COMPLETE);
   }
 }
+#endif
+void Target_MainLoop(void)
+{
+	Target_StatusTypeDef status = TARGET_ERROR;
+
+	Button_Update();
+
+	/* Button programming start */
+  if(Button_WasPressed() == 1)
+  {
+  	Target_LedSet(TARGET_LED_STAT_PROGRAMMING);
+  	Buzzer_SetState(BUZZER_PROG_START);
+  	u32_StartTime = HAL_GetTick();
+
+  	/* Target flash operation */
+  	status = Target_Connect();
+  	Target_ErrorHandle(status, "Target Connect Error");
+  	if(status != TARGET_OK) return;
+
+  	status = Target_Proteciton_Unlock();
+  	Target_ErrorHandle(status, "Target Protection Unlock Error");
+  	if(status != TARGET_OK) return;
+
+  	status = Target_MassErase();
+  	Target_ErrorHandle(status, "Target MassErase Error");
+  	if(status != TARGET_OK) return;
+
+  	status = Target_Program();
+  	Target_ErrorHandle(status, "Target Program Error");
+  	if(status != TARGET_OK) return;
+
+  	status = Target_Verfify();
+  	Target_ErrorHandle(status, "Target Verify Error");
+  	if(status != TARGET_OK) return;
+
+  	status = Target_Protection_Lock();
+  	Target_ErrorHandle(status, "Target Protection Lock Error");
+  	if(status != TARGET_OK) return;
+
+  	printf("Target program completed\n");
+
+    u32_ElasedTime = HAL_GetTick() - u32_StartTime;
+    printf("Total Elapsed Programming Time: %d ms\n\n", u32_ElasedTime);
+    Target_LedSet(TARGET_LED_STAT_COMPLETE);
+    Buzzer_SetState(BUZZER_PROG_COMPLETE);
+  }
+}
+
 
 Target_StatusTypeDef Target_Connect(void)
 {
@@ -430,7 +478,6 @@ Target_StatusTypeDef Target_Verfify(void)
 
 Target_StatusTypeDef Target_Proteciton_Unlock(void)
 {
-	Target_StatusTypeDef status = TARGET_ERROR;
 	uint32_t Option_Status = 0;
 
 	printf("Target protection check before flash programming.\n");
@@ -478,7 +525,6 @@ Target_StatusTypeDef Target_Proteciton_Unlock(void)
 
 Target_StatusTypeDef Target_Protection_Lock(void)
 {
-	Target_StatusTypeDef status = TARGET_ERROR;
 	uint32_t Option_Status = 0;
 
 	printf("Target protection configure.\n");
@@ -505,20 +551,6 @@ Target_StatusTypeDef Target_Protection_Lock(void)
 	return TARGET_OK;
 }
 
-
-
-void Target_BuutonPush(void)
-{
-  if(u8_ButtonLock == 0)
-  {
-  	u8_ButtonPushed = 1;
-  }
-  else
-  {
-  	/* Do Nothing */
-  }
-}
-
 static void Target_ErrorHandle(Target_StatusTypeDef status, const char *errorMessage)
 {
     if (status != TARGET_OK)
@@ -526,7 +558,6 @@ static void Target_ErrorHandle(Target_StatusTypeDef status, const char *errorMes
         printf("%s\n", errorMessage);
         Target_LedSet(TARGET_LED_STAT_FAILED);
         Buzzer_SetState(BUZZER_PROG_FAILED);
-        u8_ButtonLock = 0;
     }
 }
 

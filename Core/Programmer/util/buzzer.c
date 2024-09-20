@@ -88,7 +88,7 @@ void PlayProgrammingCompleteSound(void)
     SetBuzzerFrequency(0);
 
     /* Set Duration */
-    HAL_Delay(300);
+    //HAL_Delay(300);
 }
 
 void PlayProgrammingFailedSound(void){
