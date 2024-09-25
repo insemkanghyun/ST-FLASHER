@@ -3,14 +3,23 @@
 #define UTIL_INC_TARGET_H_
 
 #include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <inttypes.h>
 #include "led.h"
+#include "buzzer.h"
+#include "button.h"
+#include "fatfs.h"
+#include "swd\dap.h"
+#include "swd\errors.h"
 
-//"FIRMWARE.HEX"
-//"C0_0xAA_FILL.hex"
-//"C0_GPIO_EXTI.hex"
-//"C0_GPIO_TOGGLE.hex"
-#define FIRMWARE_FILENAME_HEX		"FIRMWARE.HEX"
-#define FIRMWARE_FILENAME_BIN		"FIRMWARE.BIN"
+#include "swd\delay.h"
+#include "util\ihex_parser.h"
+
+#define FIRMWARE_FILENAME_HEX					"FIRMWARE.HEX"
+#define FIRMWARE_FILENAME_BIN					"FIRMWARE.BIN"
+#define FIRMWARE_PROTECT_OPTION_FILE	"OPTION.TXT"
 
 /* Target SW-DP ID */
 #define STM32C0_SWDP_ID		0x0BC11477
@@ -40,15 +49,8 @@
 #define STM32H7_DEV_ID3					0x483 //STM32H72x, STM32H73x
 #define STM32H7_DEV_ID4					0x450 //STM32H742, STM32H743/753 and STM32H750 + STM32H745/755 and STM32H747/757
 
-
-
-typedef enum
-{
-  TARGET_OK       = 0x00U,
-	TARGET_ERROR    = 0x01U,
-	TARGET_BUSY     = 0x02U,
-	TARGET_TIMEOUT  = 0x03U
-} Target_StatusTypeDef;
+#define TARGET_OK			0
+#define TARGET_ERROR	1
 
 typedef enum
 {
@@ -71,16 +73,6 @@ typedef enum
 } Target_FamilyTypeDef;
 
 
-
-
-#define 	TARGET_FLASH_STATE_IDLE			 0x00U
-#define 	TARGET_FLASH_STATE_CONNECT	 0x01U
-#define 	TARGET_FLASH_STATE_ERASE		 0x02U
-#define 	TARGET_FLASH_STATE_PROGRAM	 0x03U
-#define 	TARGET_FLASH_STATE_VERIFY		 0x04U
-#define 	TARGET_FLASH_STATE_ERROR		 0x05U
-
-
 typedef struct target{
 	uint32_t 							TargetDpId;
 	uint32_t							TargetApId;
@@ -89,18 +81,7 @@ typedef struct target{
 	uint32_t							TargetRevId;
 }Target_InfoTypeDef;
 
-
-
-Target_StatusTypeDef Target_Connect(void);
-Target_StatusTypeDef Target_MassErase(void);
-Target_StatusTypeDef Target_Program(void);
-Target_StatusTypeDef Target_Verfify(void);
-Target_StatusTypeDef Target_Option_Program(void);
-Target_StatusTypeDef Target_Proteciton_Unlock(void);
-Target_StatusTypeDef Target_Protection_Lock(void);
-
 void Target_MainLoop(void);
-void Target_BuutonPush(void);
-void Target_LedSet(LedStatus status);
+void log_message(const char *format, ...);
 
 #endif /* UTIL_INC_TARGET_H_ */

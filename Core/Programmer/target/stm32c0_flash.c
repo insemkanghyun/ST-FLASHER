@@ -8,9 +8,9 @@
   * @brief  Perform a mass erase.
   * @retval Target Status
   */
-Target_StatusTypeDef Stm32c0_Flash_MassErase(void)
+bool Stm32c0_Flash_MassErase(void)
 {
-	Target_StatusTypeDef status;
+	bool status;
 	uint32_t tmp = 0;
 
 	/* Wait for last operation to be completed */
@@ -31,11 +31,11 @@ Target_StatusTypeDef Stm32c0_Flash_MassErase(void)
   * @param  Address Specifies the address to be programmed.
   * @param  Data Specifies the data to be programmed
   *               This parameter is the data for the double word program.
-  * @retval Target_StatusTypeDef Target Status
+  * @retval bool Target Status
   */
-Target_StatusTypeDef Stm32c0_Flash_Program(uint32_t Address, uint64_t Data)
+bool Stm32c0_Flash_Program(uint32_t Address, uint64_t Data)
 {
-		Target_StatusTypeDef status;
+		bool status;
 		uint32_t tmp = 0;
 
 		/* Wait for last operation to be completed */
@@ -69,9 +69,9 @@ Target_StatusTypeDef Stm32c0_Flash_Program(uint32_t Address, uint64_t Data)
   * @brief  Unlock the FLASH control register access.
   * @retval Target Status
   */
-Target_StatusTypeDef Stm32c0_Flash_Unlock(void)
+bool Stm32c0_Flash_Unlock(void)
 {
-	Target_StatusTypeDef status = TARGET_OK;
+	bool status = TARGET_OK;
 	uint32_t tmp = 0;
 
 	tmp = readMem(STM32C0_FLASH_CR)& STM32C0_FLASH_CR_LOCK;
@@ -95,9 +95,9 @@ Target_StatusTypeDef Stm32c0_Flash_Unlock(void)
   * @brief  Lock the FLASH control register access.
   * @retval Target Status
   */
-Target_StatusTypeDef Stm32c0_Flash_Lock(void)
+bool Stm32c0_Flash_Lock(void)
 {
-	Target_StatusTypeDef status = TARGET_ERROR;
+	bool status = TARGET_ERROR;
 	uint32_t tmp = 0;
 
 	/* Set the LOCK Bit to lock the FLASH Registers access */
@@ -116,9 +116,9 @@ Target_StatusTypeDef Stm32c0_Flash_Lock(void)
 /**
   * @brief  Wait for a FLASH operation to complete.
   * @param  Timeout maximum flash operation timeout
-  * @retval Target_StatusTypeDef Status
+  * @retval bool Status
   */
-Target_StatusTypeDef Stm32c0_Flash_WaitOperation(uint32_t Timeout)
+bool Stm32c0_Flash_WaitOperation(uint32_t Timeout)
 {
   uint32_t error;
   uint32_t tmp = 0;
@@ -134,7 +134,7 @@ Target_StatusTypeDef Stm32c0_Flash_WaitOperation(uint32_t Timeout)
   {
     if (HAL_GetTick() >= timeout)
     {
-      return TARGET_TIMEOUT;
+      return TARGET_ERROR;
     }
     tmp = readMem(STM32C0_FLASH_SR) & STM32C0_FLASH_FLAG_BSY;
   }
@@ -152,7 +152,7 @@ Target_StatusTypeDef Stm32c0_Flash_WaitOperation(uint32_t Timeout)
   {
     if (HAL_GetTick() >= timeout)
     {
-      return TARGET_TIMEOUT;
+      return TARGET_ERROR;
     }
     tmp = readMem(STM32C0_FLASH_SR) & STM32C0_FLASH_FLAG_CFGBSY;
   }
@@ -165,9 +165,9 @@ Target_StatusTypeDef Stm32c0_Flash_WaitOperation(uint32_t Timeout)
   * @brief  Lock the FLASH Option Bytes Registers access.
   * @retval HAL Status
   */
-Target_StatusTypeDef Stm32c0_Flash_OB_Lock(void)
+bool Stm32c0_Flash_OB_Lock(void)
 {
-	Target_StatusTypeDef status = TARGET_ERROR;
+	bool status = TARGET_ERROR;
 	uint32_t tmp = 0;
 
 	/* Set the OPTLOCK Bit to lock the FLASH Option Byte Registers access */
@@ -187,9 +187,9 @@ Target_StatusTypeDef Stm32c0_Flash_OB_Lock(void)
   * @brief  Unlock the FLASH Option Bytes Registers access.
   * @retval HAL Status
   */
-Target_StatusTypeDef Stm32c0_Flash_OB_Unlock(void)
+bool Stm32c0_Flash_OB_Unlock(void)
 {
-	Target_StatusTypeDef status = TARGET_ERROR;
+	bool status = TARGET_ERROR;
 	uint32_t tmp = 0;
 
 	tmp = readMem(STM32C0_FLASH_CR)& STM32C0_FLASH_CR_OPTLOCK;
@@ -311,10 +311,10 @@ void Stm32c0_Flash_OB_Launch(void)
   *         - an exit from Standby or Shutdown mode.
   * @retval HAL Status
   */
-Target_StatusTypeDef Stm32c0_Flash_OB_Program(uint32_t RDPLevel)
+bool Stm32c0_Flash_OB_Program(uint32_t RDPLevel)
 {
 	uint32_t optr;
-	Target_StatusTypeDef status;
+	bool status;
 	uint32_t tmp = 0;
 
 	/* Only modify RDP so get current user data */

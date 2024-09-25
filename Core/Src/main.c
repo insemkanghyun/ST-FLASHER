@@ -45,6 +45,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+RTC_HandleTypeDef hrtc;
+
 SD_HandleTypeDef hsd;
 DMA_HandleTypeDef hdma_sdio_rx;
 DMA_HandleTypeDef hdma_sdio_tx;
@@ -70,6 +72,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -262,19 +265,17 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FATFS_Init();
   MX_USB_DEVICE_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
 	/* SWD DAP usDelay(): TIM1 */
 	HAL_TIM_Base_Start(&htim2);
 
-	/* buzzer sound timer pwm start: TIM2 */
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-
 	/* Set programmer LED & Buzzer state */
-	Target_LedSet(TARGET_LED_STAT_BOOT);
+	LED_SetState(TARGET_LED_STAT_BOOT);
 	Buzzer_SetState(BUZZER_BOOT);
 
-	printf("ST-Flash Boot OK! v%d\n", ST_FLASHER_VERSION);
+	log_message("ST-Flash Boot OK! v%d\n", ST_FLASHER_VERSION);
 	/* w25 serial flash test */
 	//w25_test();
   /* USER CODE END 2 */
@@ -334,6 +335,41 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 7874;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
 }
 
 /**
@@ -622,11 +658,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PROGRAM_BTN_Pin OPTION_PROG_DIP_SW_Pin */
-  GPIO_InitStruct.Pin = PROGRAM_BTN_Pin|OPTION_PROG_DIP_SW_Pin;
+  /*Configure GPIO pin : PROGRAM_BTN_Pin */
+  GPIO_InitStruct.Pin = PROGRAM_BTN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(PROGRAM_BTN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PC7 */
   GPIO_InitStruct.Pin = GPIO_PIN_7;

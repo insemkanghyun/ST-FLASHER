@@ -4,6 +4,11 @@
 #include "target.h"
 
 /**
+  * @brief FLASH Address
+  */
+#define STM32C0_FLASH_START_ADDRESS						0x08000000UL
+
+/**
   * @brief FLASH Registers
   */
 #define STM32C0_PERIPH_BASE										(0x40000000UL)
@@ -266,15 +271,15 @@
                                          STM32C0_OB_USER_NBOOT0           | STM32C0_OB_USER_NRST_MODE  | STM32C0_OB_USER_INPUT_RESET_HOLDER) /*!< all option bits */
 #endif /* FLASH_OPTR_HSE_NOT_REMAPPED */
 
-Target_StatusTypeDef Stm32c0_Flash_MassErase(void);
-Target_StatusTypeDef Stm32c0_Flash_Program(uint32_t Address, uint64_t Data);
-Target_StatusTypeDef Stm32c0_Flash_Unlock(void);
-Target_StatusTypeDef Stm32c0_Flash_Lock(void);
-Target_StatusTypeDef Stm32c0_Flash_WaitOperation(uint32_t Timeout);
-Target_StatusTypeDef Stm32c0_Flash_OB_Lock(void);
-Target_StatusTypeDef Stm32c0_Flash_OB_Unlock(void);
+bool Stm32c0_Flash_MassErase(void);
+bool Stm32c0_Flash_Program(uint32_t Address, uint64_t Data);
+bool Stm32c0_Flash_Unlock(void);
+bool Stm32c0_Flash_Lock(void);
+bool Stm32c0_Flash_WaitOperation(uint32_t Timeout);
+bool Stm32c0_Flash_OB_Lock(void);
+bool Stm32c0_Flash_OB_Unlock(void);
 uint32_t Stm32c0_Flash_OB_GetUser(void);
 void Stm32c0_Flash_OB_OptrConfig(uint32_t UserType, uint32_t UserConfig, uint32_t RDPLevel);
 void Stm32c0_Flash_OB_Launch(void);
-Target_StatusTypeDef Stm32c0_Flash_OB_Program(uint32_t RDPLevel);
+bool Stm32c0_Flash_OB_Program(uint32_t RDPLevel);
 #endif /* STM32C0_FLASH_H_ */

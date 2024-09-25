@@ -92,7 +92,8 @@
    
 /* Value to write to AIRCR in order to do a soft
  * reset of the target */
-#define AIRCR_RESET_CMD 0x05FA0006
+//#define AIRCR_RESET_CMD 0x05FA0006//??
+#define AIRCR_RESET_CMD 0x05FA0004
 
 /* Bit fields for the CSW register */
 #define AP_CSW_32BIT_TRANSFER   0x02

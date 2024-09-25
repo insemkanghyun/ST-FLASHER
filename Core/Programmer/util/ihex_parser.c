@@ -21,7 +21,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 #include "ihex_parser.h"
 
 #if (CONFIG_IHEX_DEBUG_OUTPUT > 0u)
-    #include <stdio.h>
+#include <stdio.h>
 #endif
 
 

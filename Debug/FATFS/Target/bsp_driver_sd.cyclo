@@ -13,5 +13,5 @@
 ../FATFS/Target/bsp_driver_sd.c:249:6:HAL_SD_TxCpltCallback	1
 ../FATFS/Target/bsp_driver_sd.c:290:13:BSP_SD_ReadCpltCallback	1
 ../FATFS/Target/bsp_driver_sd.c:259:6:HAL_SD_RxCpltCallback	1
-../FATFS/Target/bsp_driver_sd.c:302:16:BSP_SD_IsDetected	2
+../FATFS/Target/bsp_driver_sd.c:302:16:BSP_SD_IsDetected	1
 ../FATFS/Target/bsp_driver_sd.c:48:16:BSP_SD_Init	3
