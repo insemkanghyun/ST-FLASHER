@@ -1,9 +1,0 @@
-../Core/Programmer/target/Target.c:385:13:Target_ProgramCallback_STM32C0	48	static
-../Core/Programmer/target/Target.c:13:1:__io_putchar	16	static
-../Core/Programmer/target/Target.c:19:6:log_message	352	static
-../Core/Programmer/target/Target.c:337:13:Target_Program	1416	static
-../Core/Programmer/target/Target.c:426:13:Target_VerifyCallback	96	static
-../Core/Programmer/target/Target.c:638:13:Target_Verify	1416	static
-../Core/Programmer/target/Target.c:148:13:Target_Connect	24	static
-../Core/Programmer/target/Target.c:751:13:Target_Protection_Lock	288	static
-../Core/Programmer/target/Target.c:794:6:Target_MainLoop	16	static

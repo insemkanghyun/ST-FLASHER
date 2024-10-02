@@ -1,3 +1,0 @@
-../Core/Programmer/util/button.c:15:6:Button_Init	0	static
-../Core/Programmer/util/button.c:32:6:Button_Update	16	static
-../Core/Programmer/util/button.c:57:9:Button_WasPressed	0	static
