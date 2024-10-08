@@ -1,5 +1,6 @@
 #include "Target.h"
 #include "stm32c0_flash.h"
+#include "stm32h7_flash.h"
 #include "swd\utils.h"
 #include <stdarg.h>
 
@@ -52,6 +53,7 @@ void log_message(const char *format, ...)
 
 /* iHex_Parser Callback */
 #define TO_BE_IMPLEMENT_CALLBACK 0
+static bool Target_ProgramCallback_STM32H7(uint32_t addr, const uint8_t *buf, uint8_t bufsize);
 static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize);
 static bool (*Target_ProgramCallback[])(uint32_t addr, const uint8_t *buf, uint8_t bufsize)={\
 					TO_BE_IMPLEMENT_CALLBACK,\
@@ -59,7 +61,18 @@ static bool (*Target_ProgramCallback[])(uint32_t addr, const uint8_t *buf, uint8
 					TO_BE_IMPLEMENT_CALLBACK,\
 					TO_BE_IMPLEMENT_CALLBACK,\
 					TO_BE_IMPLEMENT_CALLBACK,\
-					Target_ProgramCallback_STM32C0};
+					Target_ProgramCallback_STM32C0,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					TO_BE_IMPLEMENT_CALLBACK,\
+					Target_ProgramCallback_STM32H7,\
+};
 
 static uint32_t Target_GetFlashStartAddress(void)
 {
@@ -77,72 +90,95 @@ static uint32_t Target_GetFlashStartAddress(void)
             return 0x08000000;
     }
 }
+static void Classify_STM32C0(Target_InfoTypeDef *target)
+{
+    target->TargetFamily = TARGET_STM32C0;
+    uint32_t tmp = readMem(STM32C0_REG_DEVICE_ID);
+    target->TargetDevId = tmp & 0xFFF;
+    target->TargetRevId = tmp >> 16;
+}
+
+static void Classify_STM32H7(Target_InfoTypeDef *target)
+{
+    target->TargetFamily = TARGET_STM32H7;
+    uint32_t tmp = readMem(STM32H7_REG_DEVICE_ID);
+    target->TargetDevId = tmp & 0xFFF;
+    target->TargetRevId = tmp >> 16;
+}
+
+static void Classify_Device_STM32C0(Target_InfoTypeDef *target)
+{
+    switch(target->TargetDevId)
+    {
+        case STM32C0_DEV_ID_0x443:
+            log_message("STM32C011xx\n");
+            break;
+        case STM32C0_DEV_ID_0x453:
+            log_message("STM32C031xx\n");
+            break;
+        default:
+            log_message("Unknown STM32C0 Device ID: 0x%03X\n", target->TargetDevId);
+            break;
+    }
+}
+
+static void Classify_Device_STM32H7(Target_InfoTypeDef *target)
+{
+    switch(target->TargetDevId)
+    {
+        case STM32H7_DEV_ID_0x480:
+            log_message("STM32H7A3/7B3/7B0\n");
+            uint32_t tmp = readMem(STM32H7_FLASH_SIZE_REG2);
+            target->TargetIsDualBank = (tmp == STM32H7_FLASH_SIZE_128KB) ? STM32H7_FLASH_SUPPORT_SINGLEBANK : STM32H7_FLASH_SUPPORT_DUALBANK;
+            log_message("Flash Bank: %s\n", (target->TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK) ? "Dual" : "Single");
+            break;
+        case STM32H7_DEV_ID_0x483:
+            log_message("STM32H72x, STM32H73x\n");
+            target->TargetIsDualBank = STM32H7_FLASH_SUPPORT_DUALBANK;
+            log_message("Flash Bank: Dual\n");
+            break;
+        case STM32H7_DEV_ID_0x450:
+            log_message("STM32H742, STM32H743/753, STM32H750, STM32H745/755, STM32H747/757\n");
+            tmp = readMem(STM32H7_FLASH_SIZE_REG1);
+            target->TargetIsDualBank = (tmp == STM32H7_FLASH_SIZE_128KB) ? STM32H7_FLASH_SUPPORT_SINGLEBANK : STM32H7_FLASH_SUPPORT_DUALBANK;
+            log_message("Flash Bank: %s\n", (target->TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK) ? "Dual" : "Single");
+            break;
+        default:
+            log_message("Unknown STM32H7 Device ID: 0x%03X\n", target->TargetDevId);
+            break;
+    }
+}
 
 static void Target_Classify(Target_InfoTypeDef *target)
 {
-	uint32_t tmp = 0;
+    /* Target Family Classify & Read Device ID */
+    switch(target->TargetDpId)
+    {
+        case STM32C0_SWDP_ID:
+            Classify_STM32C0(target);
+            break;
+        case STM32H7_SWDP_ID:
+            Classify_STM32H7(target);
+            break;
+        default:
+            /* Unsupported Device */
+            log_message("Unsupported Device Family\n");
+            return;
+    }
 
-	/* Target Family Classify & Read Device ID */
-	if(target->TargetDpId == STM32C0_SWDP_ID)
-	{
-		target->TargetFamily = TARGET_STM32C0;
-		tmp = readMem(STM32C0_REG_DEVICE_ID);
-
-	}
-	else if(target->TargetDpId == STM32H7_SWDP_ID)
-	{
-		target->TargetFamily = TARGET_STM32H7;
-		tmp = readMem(STM32H7_REG_DEVICE_ID);
-	}
-	else
-	{
-		/* Do Nothing */
-	}
-
-	target->TargetDevId = tmp & 0xFFF;
-	target->TargetRevId = tmp >> 16;
-
-	switch(target->TargetDevId)
-	{
-		case STM32C0_DEV_ID1:
-			log_message("STM32C011xx\n");
-			break;
-		case STM32C0_DEV_ID2:
-			log_message("STM32C031xx\n");
-			break;
-		case STM32H7_DEV_ID1:
-			log_message("STM32H7Rx/7Sx\n");
-			break;
-		case STM32H7_DEV_ID2:
-			log_message("STM32H7A3/7B3/7B0\n");
-			break;
-		case STM32H7_DEV_ID3:
-			log_message("STM32H72x, STM32H73x\n");
-			break;
-		case STM32H7_DEV_ID4:
-			log_message("STM32H742, STM32H743/753 and STM32H750\n");
-			log_message("STM32H745/755 and STM32H747/757\n");
-			break;
-		default:
-			log_message("Unknown Device ID.\n");
-			//Error_Handler();
-			break;
-	}
-
-	//if stm32c0...
-	switch(target->TargetRevId)
-	{
-	case STM32C0_REV_ID1:
-	//case STM32C0_REV_ID3:
-		log_message("Revision Code A(1.0)\n");
-		break;
-	case STM32C0_REV_ID2:
-	//case STM32C0_REV_ID4:
-		log_message("Revision Code Z(1.1)\n");
-		break;
-	default:
-		log_message("Unknown Revision ID\n");
-	}
+    /* Device Classification and Flash Bank Configuration */
+    switch(target->TargetFamily)
+    {
+        case TARGET_STM32C0:
+            Classify_Device_STM32C0(target);
+            break;
+        case TARGET_STM32H7:
+            Classify_Device_STM32H7(target);
+            break;
+        default:
+            log_message("Unknown Target Family\n");
+            break;
+    }
 }
 
 static bool Target_Connect(void)
@@ -366,20 +402,48 @@ static bool Target_Program(void)
     }
 }
 
+static void Target_MassErase_STM32C0(void)
+{
+    Stm32c0_Flash_Unlock();
+    Stm32c0_Flash_MassErase();
+    Stm32c0_Flash_Lock();
+}
+
+static void Target_MassErase_STM32H7(bool isDualBank)
+{
+    if (isDualBank)
+    {
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
+        Stm32h7_Flash_MassErase(STM32H7_FLASH_VOLTAGE_RANGE_4, STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_MassErase(STM32H7_FLASH_VOLTAGE_RANGE_4, STM32H7_FLASH_BANK_2);
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+    }
+    else
+    {
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_MassErase(STM32H7_FLASH_VOLTAGE_RANGE_4, STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+    }
+}
+
 static bool Target_MassErase(void)
 {
-	log_message("Target MassErase\n");
-	switch(target.TargetFamily)
-	{
-		case TARGET_STM32C0:
-			Stm32c0_Flash_Unlock();
-			Stm32c0_Flash_MassErase();
-			Stm32c0_Flash_Lock();
-			break;
-		default:
-			break;
-	}
-	return TARGET_OK;
+    log_message("Target MassErase\n");
+    switch(target.TargetFamily)
+    {
+        case TARGET_STM32C0:
+        		Target_MassErase_STM32C0();
+            break;
+        case TARGET_STM32H7:
+        		Target_MassErase_STM32H7(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK);
+            break;
+        default:
+            log_message("Unsupported Target Family for Mass Erase\n");
+            return false;
+    }
+    return TARGET_OK;
 }
 
 static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
@@ -422,6 +486,233 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 
 	return true;
 }
+
+// Callback function to program the Stm32h7 flash memory
+#if 0
+bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
+{
+    // Assume data_size is a multiple of 4 and <= 32
+    static uint8_t combined_data[32];
+    static uint8_t combined_offset = 0;
+    static uint32_t current_address;
+
+    if (combined_offset == 0) {
+        current_address = address;
+    }
+
+    if (data_size % 4 != 0 || data_size > 32) {
+        return false;
+    }
+
+    // Copy the data to the appropriate position in combined_data
+    memcpy(combined_data + combined_offset, data, data_size);
+    combined_offset += data_size;
+
+    // If combined_data is fully filled (32 bytes), program the flash
+    if (combined_offset == 32) {
+        // Determine which bank to unlock based on the address
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            // Unlock bank 1
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
+                return false;
+            }
+        } else {
+            // Unlock bank 2
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
+                return false;
+            }
+        }
+
+        // Program the flash memory (32 bytes = 8 words)
+        if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, 8) != TARGET_OK) {
+            // Lock the bank before returning false
+            if (current_address < STM32H7_FLASH_BANK2_BASE) {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+            } else {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+            }
+            return false;
+        }
+
+        // Lock the bank after programming
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        } else {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+        }
+
+        // Increment the address by 32 bytes for the next chunk
+        current_address += 32;
+
+        // Reset combined_offset for the next 32-byte chunk
+        combined_offset = 0;
+    }
+
+    // If this is the last call and combined_offset is not 0, pad with 0xFF and program
+    if (data_size == 0 && combined_offset > 0) {
+        // Pad the remaining bytes with 0xFF to fill 32 bytes
+        memset(combined_data + combined_offset, 0xFF, 32 - combined_offset);
+        combined_offset = 32;
+
+        // Determine which bank to unlock based on the address
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            // Unlock bank 1
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
+                return false;
+            }
+        } else {
+            // Unlock bank 2
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
+                return false;
+            }
+        }
+
+        // Program the flash memory (32 bytes = 8 words)
+        if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, 8) != TARGET_OK) {
+            // Lock the bank before returning false
+            if (current_address < STM32H7_FLASH_BANK2_BASE) {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+            } else {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+            }
+            return false;
+        }
+
+        // Lock the bank after programming
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        } else {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+        }
+
+        // Increment the address by 32 bytes for the next chunk
+        current_address += 32;
+
+        // Reset combined_offset for the next 32-byte chunk
+        combined_offset = 0;
+    }
+
+    return true;
+}
+#else
+// Callback function to program the Stm32h7 flash memory
+bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
+{
+    // Assume data_size is a multiple of 4 and <= 32
+    static uint8_t combined_data[32];
+    static uint8_t combined_offset = 0;
+    static uint32_t current_address;
+
+    if (combined_offset == 0) {
+        current_address = address;
+    }
+
+    if (data_size % 4 != 0 || data_size > 32) {
+        return false;
+    }
+
+    // Copy the data to the appropriate position in combined_data
+    memcpy(combined_data + combined_offset, data, data_size);
+    combined_offset += data_size;
+
+    // Determine programming word size based on TargetDevId
+    uint8_t words_to_program = (target.TargetDevId == 0x480) ? 4 : 8;
+    uint8_t bytes_to_program = words_to_program * 4;
+
+    // Program the flash if enough data is accumulated
+    if (combined_offset >= bytes_to_program) {
+        // Determine which bank to unlock based on the address
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            // Unlock bank 1
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
+                return false;
+            }
+        } else {
+            // Unlock bank 2
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
+                return false;
+            }
+        }
+
+        // Program the flash memory
+        if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, words_to_program) != TARGET_OK) {
+            // Lock the bank before returning false
+            if (current_address < STM32H7_FLASH_BANK2_BASE) {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+            } else {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+            }
+            return false;
+        }
+
+        // Lock the bank after programming
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        } else {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+        }
+
+        // Increment the address by the number of bytes programmed
+        current_address += bytes_to_program;
+
+        // Move remaining data to the beginning of combined_data
+        combined_offset -= bytes_to_program;
+        if (combined_offset > 0) {
+            memmove(combined_data, combined_data + bytes_to_program, combined_offset);
+        }
+    }
+
+    // If this is the last call and combined_offset is not 0, pad with 0xFF and program
+    if (data_size == 0 && combined_offset > 0) {
+        // Pad the remaining bytes with 0xFF to fill the required word size
+        uint8_t padding_size = (target.TargetDevId == 0x480) ? 16 : 32;
+        memset(combined_data + combined_offset, 0xFF, padding_size - combined_offset);
+        combined_offset = padding_size;
+
+        // Determine which bank to unlock based on the address
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            // Unlock bank 1
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
+                return false;
+            }
+        } else {
+            // Unlock bank 2
+            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
+                return false;
+            }
+        }
+
+        // Program the flash memory
+        words_to_program = (combined_offset == 32) ? 8 : 4;
+        if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, words_to_program) != TARGET_OK) {
+            // Lock the bank before returning false
+            if (current_address < STM32H7_FLASH_BANK2_BASE) {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+            } else {
+                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+            }
+            return false;
+        }
+
+        // Lock the bank after programming
+        if (current_address < STM32H7_FLASH_BANK2_BASE) {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        } else {
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+        }
+
+        // Increment the address by the number of bytes programmed
+        current_address += padding_size;
+
+        // Reset combined_offset for the next 32-byte chunk
+        combined_offset = 0;
+    }
+
+    return true;
+}
+#endif
+
+
 
 static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
@@ -719,6 +1010,8 @@ static bool Target_Protection_Unlock(void)
         /* STM32C0 */
         case TARGET_STM32C0:
             return Target_Protection_Unlock_STM32C0();
+        case TARGET_STM32F7:
+        		log_message("Target family not supported for protection unlock.\n");
             break;
         default:
             log_message("Target family not supported for protection unlock.\n");

@@ -1,0 +1,3 @@
+../Core/Programmer/swd/delay.c:40:6:initDelay	1
+../Core/Programmer/swd/delay.c:54:6:delayMs	1
+../Core/Programmer/swd/delay.c:62:6:delayUs	2

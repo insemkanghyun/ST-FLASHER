@@ -1,0 +1,3 @@
+../Core/Programmer/util/ihex_parser.c:130:6:ihex_reset_state	1
+../Core/Programmer/util/ihex_parser.c:138:6:ihex_set_callback_func	1
+../Core/Programmer/util/ihex_parser.c:143:6:ihex_parser	39

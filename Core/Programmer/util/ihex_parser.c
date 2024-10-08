@@ -99,6 +99,7 @@ static void ihex_debug_output()
     }
 
     case 1:         //EOF
+    		//callback_fp(0,0,0); //h7...
         printf("EOF\n");
         break;
 
@@ -297,6 +298,11 @@ bool ihex_parser(const uint8_t *steambuf, uint32_t size)
                     return false;
                 }
             }
+            else if(record_type == 1) //add for h7
+            {
+            	callback_fp(0,0,0);
+            }
+
 
             state = START_CODE_STATE;
             break;

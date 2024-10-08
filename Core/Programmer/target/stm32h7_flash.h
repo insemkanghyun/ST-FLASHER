@@ -97,6 +97,14 @@ stm32h757xx
 
 #define STM32H7_FLASH_TIMEOUT_VALUE              50000U /* 50 s */
 
+/** @defgroup FLASHEx_Voltage_Range FLASH Voltage Range
+  * @{
+  */
+#define STM32H7_FLASH_VOLTAGE_RANGE_1        0x00000000U       /*!< Flash program/erase by 8 bits  */
+#define STM32H7_FLASH_VOLTAGE_RANGE_2        STM32H7_FLASH_CR_PSIZE_0  /*!< Flash program/erase by 16 bits */
+#define STM32H7_FLASH_VOLTAGE_RANGE_3        STM32H7_FLASH_CR_PSIZE_1  /*!< Flash program/erase by 32 bits */
+#define STM32H7_FLASH_VOLTAGE_RANGE_4        STM32H7_FLASH_CR_PSIZE    /*!< Flash program/erase by 64 bits */
+
 /*******************  Bits definition for FLASH_ACR register  **********************/
 #define STM32H7_FLASH_ACR_LATENCY_Pos                (0U)
 #define STM32H7_FLASH_ACR_LATENCY_Msk                (0xFUL << STM32H7_FLASH_ACR_LATENCY_Pos)  /*!< 0x0000000F: bit4 is kept only for legacy purpose */

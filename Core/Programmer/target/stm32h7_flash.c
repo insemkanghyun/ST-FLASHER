@@ -10,10 +10,10 @@
 bool Stm32h7_Flash_WaitOperation(uint32_t Timeout, uint32_t Bank)
 {
   /* Determine the appropriate status register and flags based on the Bank */
-  uint32_t sr_reg = (Bank == FLASH_BANK_1) ? STM32H7_FLASH_SR1 : STM32H7_FLASH_SR2;
-  uint32_t qw_flag = (Bank == FLASH_BANK_1) ? STM32H7_FLASH_FLAG_QW_BANK1 : STM32H7_FLASH_FLAG_QW_BANK2;
-  uint32_t all_errors_flag = (Bank == FLASH_BANK_1) ? STM32H7_FLASH_FLAG_ALL_ERRORS_BANK1 : STM32H7_FLASH_FLAG_ALL_ERRORS_BANK2;
-  uint32_t eop_flag = (Bank == FLASH_BANK_1) ? STM32H7_FLASH_FLAG_EOP_BANK1 : STM32H7_FLASH_FLAG_EOP_BANK2;
+  uint32_t sr_reg = (Bank == STM32H7_FLASH_BANK_1) ? STM32H7_FLASH_SR1 : STM32H7_FLASH_SR2;
+  uint32_t qw_flag = (Bank == STM32H7_FLASH_BANK_1) ? STM32H7_FLASH_FLAG_QW_BANK1 : STM32H7_FLASH_FLAG_QW_BANK2;
+  uint32_t all_errors_flag = (Bank == STM32H7_FLASH_BANK_1) ? STM32H7_FLASH_FLAG_ALL_ERRORS_BANK1 : STM32H7_FLASH_FLAG_ALL_ERRORS_BANK2;
+  uint32_t eop_flag = (Bank == STM32H7_FLASH_BANK_1) ? STM32H7_FLASH_FLAG_EOP_BANK1 : STM32H7_FLASH_FLAG_EOP_BANK2;
 
   uint32_t tickstart = HAL_GetTick();
   uint32_t tmp = readMem(sr_reg) & qw_flag;
@@ -35,7 +35,7 @@ bool Stm32h7_Flash_WaitOperation(uint32_t Timeout, uint32_t Bank)
   uint32_t errorflag = readMem(sr_reg) & all_errors_flag;
 
   /* Clear Error Flags with appropriate masking */
-  if (Bank == FLASH_BANK_2)
+  if (Bank == STM32H7_FLASH_BANK_2)
   {
     writeMem(sr_reg, errorflag & 0x7FFFFFFFU);  // Apply mask for Bank 2
   }
@@ -239,7 +239,7 @@ bool Stm32h7_Flash_Program(uint32_t FlashAddress, uint32_t DataAddress, uint32_t
   /* Set PG bit */
   if(status == TARGET_OK)
   {
-    if(bank == FLASH_BANK_1)
+    if(bank == STM32H7_FLASH_BANK_1)
     {
     	tmp = readMem(STM32H7_FLASH_CR1) | STM32H7_FLASH_CR_PG;
     	writeMem(STM32H7_FLASH_CR1, tmp);
@@ -253,13 +253,14 @@ bool Stm32h7_Flash_Program(uint32_t FlashAddress, uint32_t DataAddress, uint32_t
   /* Program the flash word */
   do
   {
-  	writeMem(dest_addr++, *src_addr++);
+  	writeMem(dest_addr, *src_addr++);
+  	dest_addr+=4;
   	row_index--;
   }while (row_index != 0U);
   status = Stm32h7_Flash_WaitOperation((uint32_t)STM32H7_FLASH_TIMEOUT_VALUE, bank);
 
   /* If the program operation is completed, disable the PG */
-  if(bank == FLASH_BANK_1)
+  if(bank == STM32H7_FLASH_BANK_1)
   {
   	tmp = readMem(STM32H7_FLASH_CR1);
   	writeMem(STM32H7_FLASH_CR1, tmp & (~STM32H7_FLASH_CR_PG));

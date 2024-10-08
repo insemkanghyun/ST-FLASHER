@@ -405,6 +405,8 @@ void writeMem(uint32_t addr, uint32_t data)
   writeAP(AP_TAR, addr);
   writeAP(AP_DRW, data);
 #else //for debug
+  writeAP(AP_TAR, addr);
+  writeAP(AP_DRW, data);
   log_message("AP_TAR: 0x%08"PRIX32"\n", addr);
 	log_message("AP_DRW: 0x%08"PRIX32"\n", data);
 #endif

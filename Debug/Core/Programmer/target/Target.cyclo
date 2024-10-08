@@ -1,0 +1,10 @@
+../Core/Programmer/target/Target.c:599:6:Target_ProgramCallback_STM32H7	23
+../Core/Programmer/target/Target.c:449:13:Target_ProgramCallback_STM32C0	5
+../Core/Programmer/target/Target.c:14:1:__io_putchar	1
+../Core/Programmer/target/Target.c:20:6:log_message	1
+../Core/Programmer/target/Target.c:373:13:Target_Program	20
+../Core/Programmer/target/Target.c:717:13:Target_VerifyCallback	13
+../Core/Programmer/target/Target.c:929:13:Target_Verify	25
+../Core/Programmer/target/Target.c:184:13:Target_Connect	12
+../Core/Programmer/target/Target.c:1044:13:Target_Protection_Lock	3
+../Core/Programmer/target/Target.c:1087:6:Target_MainLoop	12
