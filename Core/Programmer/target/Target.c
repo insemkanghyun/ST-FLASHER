@@ -83,6 +83,8 @@ static uint32_t Target_GetFlashStartAddress(void)
             break;
         case TARGET_STM32F4:
             return 0x08000000;
+        case TARGET_STM32H7:
+            return 0x08000000;
             break;
         /* Add other target families and their start addresses as needed */
         default:
@@ -333,6 +335,10 @@ static bool Target_ProgramBin(void)
         /* End of file */
         if (readcount == 0)
         {
+        		if(target.TargetFamily == TARGET_STM32H7) // STM32H7 Dummy Callback
+        		{
+        			Target_ProgramCallback[target.TargetFamily](0,0,0);
+        		}
             res = f_close(&file);
             if (res != FR_OK)
             {
@@ -352,7 +358,7 @@ static bool Target_ProgramBin(void)
                 size_t chunk_size = (readcount - i) >= 16 ? 16 : (readcount - i);
 
                 /* Call the programming function */
-                if (!Target_ProgramCallback_STM32C0(current_address, &fbuf[i], (uint8_t)chunk_size))
+                if (!Target_ProgramCallback[target.TargetFamily](current_address, &fbuf[i], (uint8_t)chunk_size))
                 {
                     log_message("Flash write error\n");
                     f_close(&file);
@@ -488,231 +494,92 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 }
 
 // Callback function to program the Stm32h7 flash memory
-#if 0
-bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
+static bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
 {
-    // Assume data_size is a multiple of 4 and <= 32
+    // Assume data_size is a multiple of 2 and <= 32
     static uint8_t combined_data[32];
     static uint8_t combined_offset = 0;
     static uint32_t current_address;
 
+    // 입력 값 검증
+    if (data_size % 2 != 0 || data_size > 32) {
+        return false;
+    }
+
+    // combined_offset이 0일 때 현재 주소를 업데이트
     if (combined_offset == 0) {
         current_address = address;
     }
 
-    if (data_size % 4 != 0 || data_size > 32) {
-        return false;
-    }
-
-    // Copy the data to the appropriate position in combined_data
+    // 데이터를 combined_data에 복사
     memcpy(combined_data + combined_offset, data, data_size);
     combined_offset += data_size;
 
-    // If combined_data is fully filled (32 bytes), program the flash
-    if (combined_offset == 32) {
-        // Determine which bank to unlock based on the address
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            // Unlock bank 1
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
-                return false;
-            }
-        } else {
-            // Unlock bank 2
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
-                return false;
-            }
-        }
-
-        // Program the flash memory (32 bytes = 8 words)
-        if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, 8) != TARGET_OK) {
-            // Lock the bank before returning false
-            if (current_address < STM32H7_FLASH_BANK2_BASE) {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-            } else {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-            }
-            return false;
-        }
-
-        // Lock the bank after programming
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-        } else {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-        }
-
-        // Increment the address by 32 bytes for the next chunk
-        current_address += 32;
-
-        // Reset combined_offset for the next 32-byte chunk
-        combined_offset = 0;
-    }
-
-    // If this is the last call and combined_offset is not 0, pad with 0xFF and program
-    if (data_size == 0 && combined_offset > 0) {
-        // Pad the remaining bytes with 0xFF to fill 32 bytes
-        memset(combined_data + combined_offset, 0xFF, 32 - combined_offset);
-        combined_offset = 32;
-
-        // Determine which bank to unlock based on the address
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            // Unlock bank 1
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
-                return false;
-            }
-        } else {
-            // Unlock bank 2
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
-                return false;
-            }
-        }
-
-        // Program the flash memory (32 bytes = 8 words)
-        if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, 8) != TARGET_OK) {
-            // Lock the bank before returning false
-            if (current_address < STM32H7_FLASH_BANK2_BASE) {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-            } else {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-            }
-            return false;
-        }
-
-        // Lock the bank after programming
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-        } else {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-        }
-
-        // Increment the address by 32 bytes for the next chunk
-        current_address += 32;
-
-        // Reset combined_offset for the next 32-byte chunk
-        combined_offset = 0;
-    }
-
-    return true;
-}
-#else
-// Callback function to program the Stm32h7 flash memory
-bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
-{
-    // Assume data_size is a multiple of 4 and <= 32
-    static uint8_t combined_data[32];
-    static uint8_t combined_offset = 0;
-    static uint32_t current_address;
-
-    if (combined_offset == 0) {
-        current_address = address;
-    }
-
-    if (data_size % 4 != 0 || data_size > 32) {
-        return false;
-    }
-
-    // Copy the data to the appropriate position in combined_data
-    memcpy(combined_data + combined_offset, data, data_size);
-    combined_offset += data_size;
-
-    // Determine programming word size based on TargetDevId
+    // 프로그래밍할 워드 크기 결정 (TargetDevId에 따라)
     uint8_t words_to_program = (target.TargetDevId == 0x480) ? 4 : 8;
     uint8_t bytes_to_program = words_to_program * 4;
 
-    // Program the flash if enough data is accumulated
+    // 충분한 데이터가 쌓였을 때 플래시 프로그래밍 수행
     if (combined_offset >= bytes_to_program) {
-        // Determine which bank to unlock based on the address
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            // Unlock bank 1
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
-                return false;
-            }
-        } else {
-            // Unlock bank 2
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
-                return false;
-            }
-        }
 
-        // Program the flash memory
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
+
+        // 플래시 메모리 프로그래밍
         if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, words_to_program) != TARGET_OK) {
-            // Lock the bank before returning false
-            if (current_address < STM32H7_FLASH_BANK2_BASE) {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-            } else {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-            }
+            // 실패 시 플래시 뱅크 락
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
             return false;
         }
 
-        // Lock the bank after programming
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-        } else {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-        }
+        // 프로그래밍 후 플래시 뱅크 락
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
 
-        // Increment the address by the number of bytes programmed
+        // 프로그래밍한 바이트 수만큼 주소 증가
         current_address += bytes_to_program;
 
-        // Move remaining data to the beginning of combined_data
+        // 남은 데이터를 combined_data의 시작 부분으로 이동
         combined_offset -= bytes_to_program;
         if (combined_offset > 0) {
             memmove(combined_data, combined_data + bytes_to_program, combined_offset);
         }
     }
 
-    // If this is the last call and combined_offset is not 0, pad with 0xFF and program
+    // 마지막 호출이며 combined_offset이 0이 아닐 때, 남은 데이터를 패딩하여 프로그래밍
     if (data_size == 0 && combined_offset > 0) {
-        // Pad the remaining bytes with 0xFF to fill the required word size
+        // 0xFF로 패딩하여 워드 크기를 맞춤
         uint8_t padding_size = (target.TargetDevId == 0x480) ? 16 : 32;
         memset(combined_data + combined_offset, 0xFF, padding_size - combined_offset);
         combined_offset = padding_size;
 
-        // Determine which bank to unlock based on the address
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            // Unlock bank 1
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1) != TARGET_OK) {
-                return false;
-            }
-        } else {
-            // Unlock bank 2
-            if (Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2) != TARGET_OK) {
-                return false;
-            }
-        }
+        // 해당 주소에 따라 플래시 뱅크 언락
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
 
-        // Program the flash memory
+        // 플래시 메모리 프로그래밍
         words_to_program = (combined_offset == 32) ? 8 : 4;
         if (Stm32h7_Flash_Program(current_address, (uint32_t)combined_data, words_to_program) != TARGET_OK) {
-            // Lock the bank before returning false
-            if (current_address < STM32H7_FLASH_BANK2_BASE) {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-            } else {
-                Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-            }
+            // 실패 시 플래시 뱅크 락
+          Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+          Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
             return false;
         }
 
-        // Lock the bank after programming
-        if (current_address < STM32H7_FLASH_BANK2_BASE) {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-        } else {
-            Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
-        }
+        // 프로그래밍 후 플래시 뱅크 락
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+        Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
 
-        // Increment the address by the number of bytes programmed
+        // 프로그래밍한 바이트 수만큼 주소 증가
         current_address += padding_size;
 
-        // Reset combined_offset for the next 32-byte chunk
+        // combined_offset 초기화
         combined_offset = 0;
     }
 
     return true;
 }
-#endif
-
-
 
 static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
@@ -720,13 +587,13 @@ static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t buf
 	uint32_t u32_ReadData[8];
 
 	/* Read 4-word from target flash memory */
-	for(int i = 0; i < (bufsize/4); i++)
+	for(int i = 0; i < 4; i++)
 	{
 		u32_ReadData[i] = readMem(addr + (i*4));
 	}
 
 	/* Convert uint32_t to uint8_t */
-  for (int i = 0; i < (bufsize / 4); i++) {
+  for (int i = 0; i < 4 ; i++) {
   	tmp[4 * i]     = u32_ReadData[i] & 0xFF;
   	tmp[4 * i + 1] = (u32_ReadData[i] >> 8) & 0xFF;
   	tmp[4 * i + 2] = (u32_ReadData[i] >> 16) & 0xFF;
@@ -882,9 +749,9 @@ static bool Target_VerifyBin(void)
                 /* Determine the size to process */
                 size_t chunk_size = readcount - i;
 
-                /* Limit chunk size to 32 bytes */
-                if(chunk_size > 32)
-                    chunk_size = 32;
+                /* Limit chunk size to 16 bytes */
+                if(chunk_size > 16)
+                    chunk_size = 16;
 
                 /* Adjust chunk_size to be a multiple of 4 */
                 size_t adjusted_chunk_size = (chunk_size / 4) * 4;
@@ -892,7 +759,7 @@ static bool Target_VerifyBin(void)
                 /* If less than 4 bytes remain, handle separately */
                 if(adjusted_chunk_size == 0)
                 {
-                    uint8_t tmp[4] = {0};
+                    uint8_t tmp[4] = {0xFF, 0xFF, 0xFF, 0xFF};
                     size_t remaining = readcount - i;
                     memcpy(tmp, &fbuf[i], remaining);
 
@@ -1007,10 +874,9 @@ static bool Target_Protection_Unlock(void)
 
     switch(target.TargetFamily)
     {
-        /* STM32C0 */
         case TARGET_STM32C0:
             return Target_Protection_Unlock_STM32C0();
-        case TARGET_STM32F7:
+        case TARGET_STM32H7:
         		log_message("Target family not supported for protection unlock.\n");
             break;
         default:

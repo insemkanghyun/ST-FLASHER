@@ -1,5 +1,0 @@
-../Core/Programmer/util/led.c:16:6:LED_Toggle	0	static
-../Core/Programmer/util/led.c:20:6:LED_On	0	static
-../Core/Programmer/util/led.c:24:6:LED_Off	0	static
-../Core/Programmer/util/led.c:29:6:LED_Handler	16	static
-../Core/Programmer/util/led.c:97:6:LED_SetState	0	static

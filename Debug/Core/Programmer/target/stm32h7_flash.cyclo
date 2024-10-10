@@ -1,5 +1,0 @@
-../Core/Programmer/target/stm32h7_flash.c:10:6:Stm32h7_Flash_WaitOperation	12
-../Core/Programmer/target/stm32h7_flash.c:81:6:Stm32h7_Flash_MassErase	4
-../Core/Programmer/target/stm32h7_flash.c:135:6:Stm32h7_Flash_Unlock	6
-../Core/Programmer/target/stm32h7_flash.c:180:6:Stm32h7_Flash_Lock	3
-../Core/Programmer/target/stm32h7_flash.c:213:6:Stm32h7_Flash_Program	11

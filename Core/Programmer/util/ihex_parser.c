@@ -24,6 +24,8 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 #include <stdio.h>
 #endif
 
+#include "target.h"
+extern Target_InfoTypeDef target;
 
 //IHEX file parser state machine
 #define START_CODE_STATE        0
@@ -298,7 +300,7 @@ bool ihex_parser(const uint8_t *steambuf, uint32_t size)
                     return false;
                 }
             }
-            else if(record_type == 1) //add for h7
+            else if((record_type == 1) && (target.TargetFamily == TARGET_STM32H7)) //Add for STM32H7, hex 'End Of File' 32byte(8word) programming unit
             {
             	callback_fp(0,0,0);
             }

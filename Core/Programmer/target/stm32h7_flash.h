@@ -83,7 +83,7 @@ stm32h757xx
 
 #define STM32H7_FLASH_BANK1_BASE          (0x08000000UL) /*!< Base address of : (up to 128 KB) Flash Bank1 accessible over AXI                        */
 #define STM32H7_FLASH_BANK2_BASE          (0x08100000UL) /*!< For legacy only , Flash bank 2 not available on STM32H750xx value line          */
-#define STM32H7_FLASH_END                 (0x0801FFFFUL) /*!< FLASH end address */
+#define STM32H7_FLASH_END                 (0x081FFFFFUL) /*!< FLASH end address */
 
 #define FLASH_NB_32BITWORD_IN_FLASHWORD_4WORD      4U                    /* 128 bits */
 #define FLASH_NB_32BITWORD_IN_FLASHWORD_8WORD      				8U                    /* 256 bits */
@@ -92,7 +92,7 @@ stm32h757xx
 #define IS_STM32H7_FLASH_PROGRAM_ADDRESS_BANK1(ADDRESS) (((ADDRESS) >= STM32H7_FLASH_BANK1_BASE) && ((ADDRESS) < STM32H7_FLASH_BANK2_BASE))
 #define IS_STM32H7_FLASH_PROGRAM_ADDRESS_BANK2(ADDRESS) (((ADDRESS) >= STM32H7_FLASH_BANK2_BASE ) && ((ADDRESS) <= STM32H7_FLASH_END))
 #else
-#define IS_STM32H7_FLASH_PROGRAM_ADDRESS_BANK1(ADDRESS) (((ADDRESS) >= FLASH_BANK1_BASE) && ((ADDRESS) <= FLASH_END))
+#define IS_STM32H7_FLASH_PROGRAM_ADDRESS_BANK1(ADDRESS) (((ADDRESS) >= STM32H7_FLASH_BANK1_BASE) && ((ADDRESS) <= STM32H7_FLASH_END))
 #endif /* DUAL_BANK */
 
 #define STM32H7_FLASH_TIMEOUT_VALUE              50000U /* 50 s */
@@ -554,6 +554,8 @@ bool Stm32h7_Flash_Program(uint32_t FlashAddress, uint32_t DataAddress, uint32_t
 bool Stm32h7_Flash_Unlock(uint32_t Banks);
 bool Stm32h7_Flash_Lock(uint32_t Banks);
 bool Stm32h7_Flash_WaitOperation(uint32_t Timeout, uint32_t Bank);
+
+
 bool Stm32h7_Flash_OB_Lock(void);
 bool Stm32h7_Flash_OB_Unlock(void);
 uint32_t Stm32h7_Flash_OB_GetUser(void);
