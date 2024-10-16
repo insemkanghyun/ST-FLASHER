@@ -612,6 +612,9 @@ void initAhbAp(void)
 
 
 
+#if USE_SWD_FAST
+
+#else
 void swdio_in_mode(void)
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -629,4 +632,5 @@ void swdio_out_mode(void)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
 }
+#endif
 

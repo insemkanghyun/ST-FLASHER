@@ -38,8 +38,8 @@
   */
 #define STM32H7_FLASH_KEY1                 0x45670123U
 #define STM32H7_FLASH_KEY2                 0xCDEF89ABU
-#define STM32H7_FLASH_OPT_KEY1             0x08192A3BU
-#define STM32H7_FLASH_OPT_KEY2             0x4C5D6E7FU
+#define STM32H7_FLASH_OPTKEY1             0x08192A3BU
+#define STM32H7_FLASH_OPTKEY2             0x4C5D6E7FU
 
 
 #define STM32H7_FLASH_OPTION_OPTR							0x1FFF7800
@@ -96,6 +96,14 @@ stm32h757xx
 #endif /* DUAL_BANK */
 
 #define STM32H7_FLASH_TIMEOUT_VALUE              50000U /* 50 s */
+
+/** @defgroup FLASHEx_Option_Bytes_Read_Protection FLASH Option Bytes Read Protection
+  * @{
+  */
+#define STM32H7_FLASH_OB_RDP_LEVEL_0       0xAA00U
+#define STM32H7_FLASH_OB_RDP_LEVEL_1       0xBB00U
+#define STM32H7_FLASH_OB_RDP_LEVEL_2       0xCC00U   /*!< Warning: When enabling read protection level 2
+                                            it s no more possible to go back to level 1 or 0 */
 
 /** @defgroup FLASHEx_Voltage_Range FLASH Voltage Range
   * @{
@@ -560,7 +568,7 @@ bool Stm32h7_Flash_OB_Lock(void);
 bool Stm32h7_Flash_OB_Unlock(void);
 uint32_t Stm32h7_Flash_OB_GetUser(void);
 void Stm32h7_Flash_OB_OptrConfig(uint32_t UserType, uint32_t UserConfig, uint32_t RDPLevel);
-void Stm32h7_Flash_OB_Launch(void);
+bool Stm32h7_Flash_OB_Launch(void);
 bool Stm32h7_Flash_OB_Program(uint32_t RDPLevel);
 
 #endif /* STM32H7_FLASH_H_ */
