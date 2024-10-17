@@ -277,6 +277,7 @@ int main(void)
 	Buzzer_SetState(BUZZER_BOOT);
 
 	log_message("ST-Flash Boot OK! v%d\n", ST_FLASHER_VERSION);
+
 	/* w25 serial flash test */
 	//w25_test();
   /* USER CODE END 2 */
@@ -582,7 +583,7 @@ static void MX_USART1_UART_Init(void)
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.Mode = UART_MODE_TX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart1) != HAL_OK)
@@ -637,13 +638,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SPI_CS_Pin|TARGET_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SPI_CS_Pin|TARGET_RST_Pin|SWD_BUF_DIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(USB_VDD_EN_GPIO_Port, USB_VDD_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, USB_VDD_EN_Pin|SWD_IO_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SWD_CLK_Pin|SWD_IO_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SWD_CLK_GPIO_Port, SWD_CLK_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : LED_GREEN_Pin LED_ORANGE_Pin LED_RED_Pin */
   GPIO_InitStruct.Pin = LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin;
@@ -671,6 +672,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SWD_BUF_DIR_Pin */
+  GPIO_InitStruct.Pin = SWD_BUF_DIR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(SWD_BUF_DIR_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : USB_VDD_EN_Pin */
   GPIO_InitStruct.Pin = USB_VDD_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -678,12 +686,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USB_VDD_EN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SWD_CLK_Pin SWD_IO_Pin */
-  GPIO_InitStruct.Pin = SWD_CLK_Pin|SWD_IO_Pin;
+  /*Configure GPIO pin : SWD_CLK_Pin */
+  GPIO_InitStruct.Pin = SWD_CLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(SWD_CLK_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SWD_IO_Pin */
+  GPIO_InitStruct.Pin = SWD_IO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

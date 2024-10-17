@@ -73,6 +73,8 @@ void Error_Handler(void);
 #define BEEP_GPIO_Port GPIOE
 #define TARGET_RST_Pin GPIO_PIN_8
 #define TARGET_RST_GPIO_Port GPIOA
+#define SWD_BUF_DIR_Pin GPIO_PIN_10
+#define SWD_BUF_DIR_GPIO_Port GPIOA
 #define USB_VDD_EN_Pin GPIO_PIN_5
 #define USB_VDD_EN_GPIO_Port GPIOB
 #define SWD_CLK_Pin GPIO_PIN_6
