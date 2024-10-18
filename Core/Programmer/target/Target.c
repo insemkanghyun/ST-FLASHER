@@ -5,10 +5,10 @@
 #include <stdarg.h>
 
 
-Target_InfoTypeDef target;
+Target_InfoTypeDef target = { .TargetChipErased = false };
 extern UART_HandleTypeDef huart1;
 extern RTC_HandleTypeDef hrtc;
-bool unlocked = 0;
+
 
 #define PRINTF_REDIRECTION	int __io_putchar(int ch)
 //#define printf(...) //for printf remove
@@ -93,6 +93,7 @@ static uint32_t Target_GetFlashStartAddress(void)
             return 0x08000000;
     }
 }
+
 static void Classify_STM32C0(Target_InfoTypeDef *target)
 {
     target->TargetFamily = TARGET_STM32C0;
@@ -336,10 +337,10 @@ static bool Target_ProgramBin(void)
         /* End of file */
         if (readcount == 0)
         {
-        		if(target.TargetFamily == TARGET_STM32H7) // STM32H7 Dummy Callback
-        		{
-        			Target_ProgramCallback[target.TargetFamily](0,0,0);
-        		}
+            if(target.TargetFamily == TARGET_STM32H7) // STM32H7 Dummy Callback
+            {
+                Target_ProgramCallback[target.TargetFamily](0, 0, 0);
+            }
             res = f_close(&file);
             if (res != FR_OK)
             {
@@ -358,15 +359,21 @@ static bool Target_ProgramBin(void)
                 /* Determine the size to process (up to 16 bytes) */
                 size_t chunk_size = (readcount - i) >= 16 ? 16 : (readcount - i);
 
+                /* Fill the remaining buffer with 0xFF if chunk_size is less than 16 */
+                if (chunk_size < 16)
+                {
+                    memset(&fbuf[i + chunk_size], 0xFF, 16 - chunk_size);
+                }
+
                 /* Call the programming function */
-                if (!Target_ProgramCallback[target.TargetFamily](current_address, &fbuf[i], (uint8_t)chunk_size))
+                if (!Target_ProgramCallback[target.TargetFamily](current_address, &fbuf[i], 16))
                 {
                     log_message("Flash write error\n");
                     f_close(&file);
                     return TARGET_ERROR;
                 }
 
-                current_address += chunk_size;
+                current_address += 16;
                 i += chunk_size;
             }
             address = current_address; // Update the base address for next read
@@ -422,6 +429,7 @@ static void Target_MassErase_STM32H7(bool isDualBank)
     {
         Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
         Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
+        //Stm32h7_Flash_MassErase(STM32H7_FLASH_VOLTAGE_RANGE_4, STM32H7_FLASH_BANK_BOTH);
         Stm32h7_Flash_MassErase(STM32H7_FLASH_VOLTAGE_RANGE_4, STM32H7_FLASH_BANK_1);
         Stm32h7_Flash_MassErase(STM32H7_FLASH_VOLTAGE_RANGE_4, STM32H7_FLASH_BANK_2);
         Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
@@ -438,7 +446,7 @@ static void Target_MassErase_STM32H7(bool isDualBank)
 
 static bool Target_MassErase(void)
 {
-	if(unlocked  == 0)
+	if(target.TargetChipErased  == 0)
 	{
     log_message("Target MassErase\n");
     switch(target.TargetFamily)
@@ -458,7 +466,7 @@ static bool Target_MassErase(void)
 	else
 	{
 		log_message("No need to mass erase(RDP Regression).\n");
-		unlocked = 0;
+		target.TargetChipErased = 0;
 	}
 
 	return TARGET_OK;
@@ -466,7 +474,7 @@ static bool Target_MassErase(void)
 
 static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
-	volatile uint64_t tmp[4] = {0};
+	uint64_t tmp[4] = {0, 0, 0, 0};
 	bool status = TARGET_OK;
 
 	/* Check valid flash address */
@@ -505,7 +513,7 @@ static bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data
 
     // 입력 값 검증
     if (data_size % 2 != 0 || data_size > 32) {
-        return false;
+        //return false;
     }
 
     // combined_offset이 0일 때 현재 주소를 업데이트
@@ -817,7 +825,7 @@ static bool Target_Protection_Unlock_STM32H7(void)
     /* If option byte Level 1 */
     if(Option_Status == STM32H7_FLASH_OB_RDP_LEVEL_1)
     {
-        log_message("Configure target RDP Level-1(0x55) to Level-0(0xAA) for flash programming.\n");
+        log_message("Configure target RDP Level-1(0xBB) to Level-0(0xAA) for flash programming.\n");
 
         /* Unlock */
         Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
@@ -835,7 +843,7 @@ static bool Target_Protection_Unlock_STM32H7(void)
 
         Option_Status = readMem(STM32H7_FLASH_OPTSR_CUR);
         log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32H7_FLASH_OPTSR_RDP_Msk);
-        unlocked = 1;
+        target.TargetChipErased = 1;
     }
     else if(Option_Status == STM32H7_FLASH_OB_RDP_LEVEL_0)
     {
@@ -876,7 +884,7 @@ static bool Target_Protection_Unlock_STM32C0(void)
 
         Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR);
         log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32C0_FLASH_OPTR_RDP_Msk);
-        unlocked = 1;
+        target.TargetChipErased = 1;
     }
     else if(Option_Status == STM32C0_OB_RDP_LEVEL_0)
     {
@@ -1010,8 +1018,15 @@ static void Target_FlashUnlock(void)
       	Stm32c0_Flash_Unlock();
 				break;
       case TARGET_STM32H7:
-					Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
-					Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
+      		if(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK)
+      		{
+						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
+      		}
+      		else
+      		{
+						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+      		}
 					break;
       default:
           log_message("Not implemented.\n");
@@ -1029,8 +1044,15 @@ static void Target_FlashLock(void)
       		Stm32c0_Flash_Lock();
 					break;
       case TARGET_STM32H7:
-					Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
-					Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+      		if(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK)
+      		{
+  					Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+  					Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_2);
+      		}
+      		else
+      		{
+  					Stm32h7_Flash_Lock(STM32H7_FLASH_BANK_1);
+      		}
 					break;
       default:
           log_message("Not implemented.\n");
@@ -1067,7 +1089,6 @@ void Target_MainLoop(void)
   	Target_ErrorHandle(status, "Target MassErase Error");
   	if(status != TARGET_OK) return;
 
-  	HAL_Delay(1000);
   	Target_FlashUnlock();
   	status = Target_Program();
   	Target_FlashLock();

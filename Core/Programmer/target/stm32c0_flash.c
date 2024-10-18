@@ -39,7 +39,9 @@ bool Stm32c0_Flash_Program(uint32_t Address, uint64_t Data)
 		uint32_t tmp = 0;
 
 		/* Wait for last operation to be completed */
+		//Remove for fast programming
 	  status = Stm32c0_Flash_WaitOperation(STM32C0_FLASH_TIMEOUT_VALUE);
+		//status = TARGET_OK;
 
 	  if (status == TARGET_OK)
 	  {

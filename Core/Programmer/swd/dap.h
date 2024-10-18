@@ -224,7 +224,7 @@
 #endif
 
 #include "stm32f4xx_ll_gpio.h"
-#define USE_SWD_FAST 0
+#define USE_SWD_FAST 1
 
 #if USE_SWD_FAST
 #define SWDIO_SET_OUTPUT()	LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT)

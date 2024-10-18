@@ -111,6 +111,7 @@ typedef struct target{
 	uint32_t							TargetDevId;
 	uint32_t							TargetRevId;
 	uint32_t							TargetIsDualBank;
+	uint32_t							TargetChipErased;
 }Target_InfoTypeDef;
 
 void Target_MainLoop(void);
