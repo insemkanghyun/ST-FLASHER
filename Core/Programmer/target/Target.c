@@ -208,8 +208,8 @@ static bool Target_Connect(void)
 		CATCH
     	log_message("SWD Error: %s\n", getErrorString(errorCode));
     	log_message("Failed to connect. Retrying...\n");
-    	//delayUs(200);
     	delayMs(200);
+    	return TARGET_ERROR;
     ENDTRY
   }
 
@@ -1059,6 +1059,7 @@ static void Target_FlashLock(void)
           break;
   }
 }
+
 
 void Target_MainLoop(void)
 {

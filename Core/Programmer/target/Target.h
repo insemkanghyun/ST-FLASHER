@@ -114,6 +114,15 @@ typedef struct target{
 	uint32_t							TargetChipErased;
 }Target_InfoTypeDef;
 
+// 파일 정보와 타이밍을 추적하기 위한 구조체
+typedef struct {
+    DWORD prevSize;
+    DWORD prevTime;
+    uint32_t stableCount;
+    uint32_t lastCheckTime;
+} FileTransferInfoTypeDef;
+
+
 void Target_MainLoop(void);
 void log_message(const char *format, ...);
 

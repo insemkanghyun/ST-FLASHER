@@ -60,7 +60,6 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 W25QXX_HandleTypeDef w25qxx; // Handler for all w25qxx operations!
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -630,9 +629,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin, GPIO_PIN_SET);
@@ -660,12 +659,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PROGRAM_BTN_Pin */
-  GPIO_InitStruct.Pin = PROGRAM_BTN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(PROGRAM_BTN_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : PC7 */
   GPIO_InitStruct.Pin = GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -678,6 +671,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(SWD_BUF_DIR_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PROGRAM_BTN_Pin */
+  GPIO_InitStruct.Pin = PROGRAM_BTN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PROGRAM_BTN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_VDD_EN_Pin */
   GPIO_InitStruct.Pin = USB_VDD_EN_Pin;

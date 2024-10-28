@@ -36,36 +36,28 @@ void LED_Handler(void)
 
     switch (currentState) {
         case TARGET_LED_STAT_BOOT:
-#if 0
-            if (counter % LED_TOGGLE_INTERVAL == 0) {
-                LED_Toggle(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-                LED_Toggle(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-                LED_Toggle(LED_RED_GPIO_Port, LED_RED_Pin);
-            }
-            break;
-#endif
-            if (counter >= LED_TOGGLE_INTERVAL && step == 0) {
+            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 0) {
             	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);   // 초록색 켜기
             	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
             	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
             	step++;
             	counter = 0;  // 카운터 초기화
             }
-            if (counter >= LED_TOGGLE_INTERVAL && step == 1) {
+            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 1) {
             	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
             	LED_On(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);  // 주황색 켜기
             	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
             	step++;
             	counter = 0;
             }
-            if (counter >= LED_TOGGLE_INTERVAL && step == 2) {
+            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 2) {
             	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
             	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
             	LED_On(LED_RED_GPIO_Port, LED_RED_Pin);        // 빨간색 켜기
             	step++;
             	counter = 0;
             }
-            if (counter >= LED_TOGGLE_INTERVAL && step == 3) {
+            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 3) {
             	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);    // 초록색 켜고 나머지 끄기
             	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
             	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
