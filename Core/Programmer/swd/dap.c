@@ -199,7 +199,7 @@ static uint32_t writeReg(bool ap, int reg, uint32_t data, bool ignoreAck)
   SWD_WRITE_BIT(0);
   SWD_WRITE_BIT(1);
   
-  SWDIO_SET_INPUT(); 
+  SWDIO_SET_INPUT();
   
   /* Turnaround */
   SWCLK_CYCLE();
@@ -622,7 +622,7 @@ void swdio_in_mode(void)
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
-	//HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET);
 }
 
 void swdio_out_mode(void)
@@ -632,7 +632,7 @@ void swdio_out_mode(void)
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
-	//HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET);
 }
 #endif
 

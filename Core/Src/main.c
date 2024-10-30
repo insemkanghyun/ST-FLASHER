@@ -41,7 +41,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define ST_FLASHER_VERSION 20240812
+#define ST_FLASHER_VERSION 20241030
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -637,13 +637,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SPI_CS_Pin|TARGET_RST_Pin|SWD_BUF_DIR_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, USB_VDD_EN_Pin|SWD_IO_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SPI_CS_Pin|TARGET_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SWD_CLK_GPIO_Port, SWD_CLK_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SWD_IO_GPIO_Port, SWD_IO_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LED_GREEN_Pin LED_ORANGE_Pin LED_RED_Pin */
   GPIO_InitStruct.Pin = LED_GREEN_Pin|LED_ORANGE_Pin|LED_RED_Pin;
@@ -659,31 +659,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PC7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SWD_BUF_DIR_Pin */
-  GPIO_InitStruct.Pin = SWD_BUF_DIR_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(SWD_BUF_DIR_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : PROGRAM_BTN_Pin */
   GPIO_InitStruct.Pin = PROGRAM_BTN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PROGRAM_BTN_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_VDD_EN_Pin */
-  GPIO_InitStruct.Pin = USB_VDD_EN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(USB_VDD_EN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SWD_CLK_Pin */
   GPIO_InitStruct.Pin = SWD_CLK_Pin;
