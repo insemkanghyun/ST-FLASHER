@@ -2,6 +2,7 @@
 #include "stm32c0_flash.h"
 #include "stm32h7_flash.h"
 #include "swd\utils.h"
+#include "FileTransferCheck.h"
 #include <stdarg.h>
 
 
@@ -472,6 +473,7 @@ static bool Target_MassErase(void)
 	return TARGET_OK;
 }
 
+#if 0
 static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
 	uint64_t tmp[4] = {0, 0, 0, 0};
@@ -502,6 +504,39 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 
 	return true;
 }
+#else
+static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
+{
+	uint64_t tmp;
+	bool status = TARGET_OK;
+
+	/* Flash programming double word */
+	for (uint32_t i = 0; i < bufsize; i += 8)
+	{
+		// tmp 초기화하여 0xFF으로 채움
+		tmp = 0xFFFFFFFFFFFFFFFF;
+
+		// 남은 바이트가 8바이트 미만일 경우, 전체를 0xFF으로 패딩 처리
+		if (bufsize - i >= 8) {
+			// 8바이트 단위로 변환
+			tmp = ((uint64_t*)(&buf[i]))[0];
+		} else {
+			// 남은 바이트만 복사하고 나머지 부분은 0xFF로 유지
+			memcpy(&tmp, &buf[i], bufsize - i);
+		}
+
+		// Double word 프로그래밍
+		status = Stm32c0_Flash_Program(addr + i, tmp);
+		if (status != TARGET_OK)
+		{
+			Stm32c0_Flash_Lock();
+			return false;
+		}
+	}
+
+	return true;
+}
+#endif
 
 // Callback function to program the Stm32h7 flash memory
 static bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
@@ -565,9 +600,9 @@ static bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data
         // combined_offset 초기화
         combined_offset = 0;
     }
-
     return true;
 }
+
 //작업필요,, 버퍼 사이즈가 32일 경우에는 어떻게 동작?
 static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
@@ -1059,20 +1094,32 @@ static void Target_FlashLock(void)
           break;
   }
 }
-
+//#define DEBUG_AUTO_PROG
+uint32_t progCnt = 0;
 
 void Target_MainLoop(void)
 {
 	bool status = TARGET_ERROR;
+
 	int u32_StartTime = 0;
 	int u32_ElasedTime = 0;
 
 	/* Check button pushed */
 	Button_Update();
 
+	/* Check File Transfer status */
+	FileTransferCheck_Loop();
+
 	/* Button programming start */
-  if(Button_WasPressed() == 1)
+#ifndef DEBUG_AUTO_PROG
+	if(Button_WasPressed() == 1)
   {
+#else
+	if(1)
+	{
+		HAL_Delay(2000);
+		log_message("Programming Count: %d\n", progCnt++);
+#endif
   	LED_SetState(TARGET_LED_STAT_PROGRAMMING);
   	Buzzer_SetState(BUZZER_PROG_START);
   	u32_StartTime = HAL_GetTick();

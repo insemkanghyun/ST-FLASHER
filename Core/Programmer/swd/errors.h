@@ -60,7 +60,7 @@
 char *getErrorString(int errorCode);
 
 /* Maximum number of nested TRY/CATCH blocks */
-#define EXCEPTION_MAX_LEVEL 5
+#define EXCEPTION_MAX_LEVEL 20
 
 extern jmp_buf swdErrors[];
 extern int swdErrorIndex;

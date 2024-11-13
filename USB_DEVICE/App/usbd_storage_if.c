@@ -300,6 +300,7 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
   * @param  blk_len: Blocks number.
   * @retval USBD_OK if all operations are OK else USBD_FAIL
   */
+#include "FileTransferCheck.h"
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
@@ -308,8 +309,9 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
 
   if (BSP_SD_IsDetected() != SD_NOT_PRESENT)
   {
-    BSP_SD_WriteBlocks_DMA((uint32_t *) buf, blk_addr, blk_len);
+  	FileTransferCheck_UpdateOnWrite();
 
+    BSP_SD_WriteBlocks_DMA((uint32_t *) buf, blk_addr, blk_len);
     /* Wait for Tx Transfer completion */
     while (usbd_WriteStatus == 0)
     {

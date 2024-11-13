@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "target.h"
 #include "led.h"
+#include "FileTransferCheck.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -195,6 +196,7 @@ void SysTick_Handler(void)
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
   LED_Handler();
+  FileTransferCheck_CheckCompletion();
   /* USER CODE END SysTick_IRQn 1 */
 }
 

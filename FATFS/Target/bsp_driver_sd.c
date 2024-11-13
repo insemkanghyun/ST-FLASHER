@@ -277,6 +277,7 @@ __weak void BSP_SD_AbortCallback(void)
   * @retval None
   * @note empty (up to the user to fill it in or to remove it if useless)
   */
+
 __weak void BSP_SD_WriteCpltCallback(void)
 {
 

@@ -18,6 +18,7 @@ static void PlayIdleSound(void);
 
 void Buzzer_SetState(BuzzerState state)
 {
+	state = BUZZER_IDLE;
 	switch(state)
 	{
 		case BUZZER_BOOT:

@@ -5,6 +5,7 @@
 "./Core/Programmer/target/Target.o"
 "./Core/Programmer/target/stm32c0_flash.o"
 "./Core/Programmer/target/stm32h7_flash.o"
+"./Core/Programmer/util/FileTransferCheck.o"
 "./Core/Programmer/util/button.o"
 "./Core/Programmer/util/buzzer.o"
 "./Core/Programmer/util/ihex_parser.o"
