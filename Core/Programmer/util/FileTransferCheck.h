@@ -20,6 +20,6 @@ uint8_t FileTransferCheck_IsTransferComplete(void);
 // 파일 전송 완료 플래그 리셋 함수
 void FileTransferCheck_ResetTransferCompleteFlag(void);
 
-void FileTransferCheck_Loop(void);
+void FileTransferCheck(void);
 
 #endif // FILE_TRANSFER_CHECK_H

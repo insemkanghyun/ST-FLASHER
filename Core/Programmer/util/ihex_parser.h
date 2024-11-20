@@ -21,7 +21,12 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef DEBUG_USE_IHEX_DEBUG
 #define CONFIG_IHEX_DEBUG_OUTPUT        1u          // Output parse status
+#else
+#define CONFIG_IHEX_DEBUG_OUTPUT        0u          // Output parse status
+
+#endif
 
 typedef bool(*ihex_callback_fp)(uint32_t addr, const uint8_t *buf, uint8_t bufsize);
 

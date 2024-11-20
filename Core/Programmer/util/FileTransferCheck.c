@@ -62,7 +62,7 @@ void FileTransferCheck_ResetTransferCompleteFlag(void)
 }
 
 // 파일 전송 완료 상태를 처리하는 함수
-void FileTransferCheck_Loop(void)
+void FileTransferCheck(void)
 {
     if (FileTransferCheck_IsTransferComplete())
     {

@@ -78,8 +78,7 @@ static void MX_RTC_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//#define DEBUG
-#ifdef DEBUG
+#ifdef DEBUG_USE_PRINTF
 #define DBG(...)    printf(__VA_ARGS__)
 #else
 #define DBG(...)

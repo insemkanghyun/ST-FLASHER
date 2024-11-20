@@ -1,0 +1,17 @@
+../Core/Programmer/swd/utils.c:64:6:haltTarget	32	static
+../Core/Programmer/swd/utils.c:87:6:runTarget	8	static
+../Core/Programmer/swd/utils.c:96:6:stepTarget	8	static
+../Core/Programmer/swd/utils.c:109:5:getFlashSize	0	static
+../Core/Programmer/swd/utils.c:131:5:getPageSize	0	static
+../Core/Programmer/swd/utils.c:189:6:getDeviceName	0	static
+../Core/Programmer/swd/utils.c:239:10:getTarWrap	0	static
+../Core/Programmer/swd/utils.c:365:6:hardResetTarget	8	static
+../Core/Programmer/swd/utils.c:381:10:readMem	16	static
+../Core/Programmer/swd/utils.c:51:10:readUniqueId	8	static
+../Core/Programmer/swd/utils.c:402:6:writeMem	8	static
+../Core/Programmer/swd/utils.c:271:6:resetAndHaltTarget	16	static
+../Core/Programmer/swd/utils.c:315:6:resetTarget	16	static
+../Core/Programmer/swd/utils.c:420:6:waitForRegReady	8	static
+../Core/Programmer/swd/utils.c:432:6:verifyDpId	0	static
+../Core/Programmer/swd/utils.c:452:6:verifyAhbApId	0	static
+../Core/Programmer/swd/utils.c:474:6:connectToTarget	16	static

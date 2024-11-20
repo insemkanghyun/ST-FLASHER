@@ -5,8 +5,11 @@
 extern TIM_HandleTypeDef htim1;
 volatile BuzzerState state = BUZZER_BOOT;
 
+#ifdef DEBUG_USE_BUZZER_SOUND_SMALL
+#define DEFAULT_FREQ 100
+#else
 #define DEFAULT_FREQ 3000
-
+#endif
 
 
 static void SetBuzzerFrequency(uint32_t frequency);
@@ -18,7 +21,7 @@ static void PlayIdleSound(void);
 
 void Buzzer_SetState(BuzzerState state)
 {
-	state = BUZZER_IDLE;
+
 	switch(state)
 	{
 		case BUZZER_BOOT:

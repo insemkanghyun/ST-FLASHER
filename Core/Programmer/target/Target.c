@@ -1094,8 +1094,6 @@ static void Target_FlashLock(void)
           break;
   }
 }
-//#define DEBUG_AUTO_PROG
-uint32_t progCnt = 0;
 
 void Target_MainLoop(void)
 {
@@ -1108,18 +1106,11 @@ void Target_MainLoop(void)
 	Button_Update();
 
 	/* Check File Transfer status */
-	FileTransferCheck_Loop();
+	FileTransferCheck();
 
 	/* Button programming start */
-#ifndef DEBUG_AUTO_PROG
 	if(Button_WasPressed() == 1)
   {
-#else
-	if(1)
-	{
-		HAL_Delay(2000);
-		log_message("Programming Count: %d\n", progCnt++);
-#endif
   	LED_SetState(TARGET_LED_STAT_PROGRAMMING);
   	Buzzer_SetState(BUZZER_PROG_START);
   	u32_StartTime = HAL_GetTick();
