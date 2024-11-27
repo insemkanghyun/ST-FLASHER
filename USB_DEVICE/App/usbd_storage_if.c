@@ -300,7 +300,6 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
   * @param  blk_len: Blocks number.
   * @retval USBD_OK if all operations are OK else USBD_FAIL
   */
-#include "FileTransferCheck.h"
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
@@ -328,6 +327,8 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     }
     ret = 0;
   }
+  // ?ƒ?ƒœ ì´ˆê¸°?™”: ?“°ê¸? ?‹¤?Œ¨ ?‹œ ?ƒ?ƒœë¥? IDLEë¡? ë¦¬ì…‹
+  FileTransferCheck_Init();
   return ret;
   /* USER CODE END 7 */
 }

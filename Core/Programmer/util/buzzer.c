@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "buzzer.h"
 #include "stm32f4xx_hal.h"
+#include "main.h"
 
 extern TIM_HandleTypeDef htim1;
 volatile BuzzerState state = BUZZER_BOOT;

@@ -224,13 +224,16 @@
 #endif
 
 #include "stm32f4xx_ll_gpio.h"
-#define USE_SWD_FAST 1
+#include "main.h"
 
-#if USE_SWD_FAST
-#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
-#define SWDIO_SET_INPUT()	LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
-//#define SWDIO_SET_OUTPUT()	LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT); HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET);
-//#define SWDIO_SET_INPUT()	LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT); HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET);
+
+#ifdef USE_SWD_FAST
+/* For 2nd PCB */
+//#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+//#define SWDIO_SET_INPUT()	LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
+/* For 3rd PCB */
+#define SWDIO_SET_OUTPUT()	 HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+#define SWDIO_SET_INPUT()	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 #else
 void swdio_in_mode(void);
 void swdio_out_mode(void);
@@ -239,7 +242,7 @@ void swdio_out_mode(void);
 #endif
 
 
-#if USE_SWD_FAST
+#ifdef USE_SWD_FAST
 #define SWDIO_SET() LL_GPIO_SetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
 #define SWDIO_CLR() LL_GPIO_ResetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
 #define SWCLK_SET() LL_GPIO_SetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_6)
@@ -252,7 +255,7 @@ void swdio_out_mode(void);
 #endif
 
 #define SWDIO_OUT(bit) {if ( bit ) SWDIO_SET(); else SWDIO_CLR();}
-#if USE_SWD_FAST
+#ifdef USE_SWD_FAST
 #define SWDIO_IN() LL_GPIO_IsInputPinSet(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
 #else
 #define SWDIO_IN() HAL_GPIO_ReadPin(SWD_IO_GPIO_Port, SWD_IO_Pin)

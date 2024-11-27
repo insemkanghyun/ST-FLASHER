@@ -37,7 +37,7 @@ Core/Programmer/swd/dap.o: ../Core/Programmer/swd/dap.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h \
- ../Core/Programmer/swd/errors.h ../Core/Inc/main.h
+ ../Core/Inc/main.h ../Core/Programmer/swd/errors.h
 ../Core/Programmer/swd/dap.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_gpio.h:
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h:
@@ -76,5 +76,5 @@ Core/Programmer/swd/dap.o: ../Core/Programmer/swd/dap.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h:
-../Core/Programmer/swd/errors.h:
 ../Core/Inc/main.h:
+../Core/Programmer/swd/errors.h:

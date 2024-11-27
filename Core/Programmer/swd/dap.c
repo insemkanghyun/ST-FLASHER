@@ -612,7 +612,7 @@ void initAhbAp(void)
 
 
 
-#if USE_SWD_FAST
+#ifdef USE_SWD_FAST
 
 #else
 void swdio_in_mode(void)

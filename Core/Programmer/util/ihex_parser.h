@@ -20,6 +20,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "main.h"
 
 #ifdef DEBUG_USE_IHEX_DEBUG
 #define CONFIG_IHEX_DEBUG_OUTPUT        1u          // Output parse status

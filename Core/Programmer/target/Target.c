@@ -294,7 +294,51 @@ static bool Target_ProgramHex(void)
     return TARGET_OK;
 }
 
+
+static bool Target_ProgramBin_STM32C0(uint32_t start_address, const uint8_t *data, uint32_t data_size)
+{
+    uint32_t address = start_address;
+    uint32_t chunk_size = 8; // 64비트 단위로 프로그래밍
+    uint32_t remaining_size = data_size;
+
+    while (remaining_size > 0)
+    {
+        // 현재 청크 크기를 결정 (남은 데이터가 8바이트보다 적으면 남은 만큼만 처리)
+        uint64_t word = 0xFFFFFFFFFFFFFFFF;  // 기본 패딩 값 0xFF로 초기화
+        uint32_t size_to_program = (remaining_size >= chunk_size) ? chunk_size : remaining_size;
+
+        // 데이터 복사 (패딩 필요 시 0xFF로 유지됨)
+        memcpy(&word, data, size_to_program);
+        // 주소와 데이터 출력 (데이터는 바이트 단위로)
+        log_message("STM32C0 Flash: Address 0x%08lX, Data: ", address);
+        for (uint32_t i = 0; i < size_to_program; i++) {
+        		log_message("%02" PRIX16 " ", data[i]);
+        }
+        log_message("\n");
+
+        // Stm32c0_Flash_Program 호출
+        if (Stm32c0_Flash_Program(address, word) == TARGET_OK)
+        {
+
+        }
+        else
+        {
+          log_message("Error: Failed to program STM32C0 flash at address 0x%08lX\n", address);
+          Stm32c0_Flash_Lock();
+          return TARGET_ERROR;
+        }
+
+        // 다음 주소 및 남은 크기 갱신
+        address += chunk_size;
+        data += size_to_program;
+        remaining_size -= size_to_program;
+    }
+    return TARGET_OK;
+}
+
+
 /* Function to program BIN files */
+#if 1
 static bool Target_ProgramBin(void)
 {
     uint8_t fbuf[256];
@@ -383,6 +427,83 @@ static bool Target_ProgramBin(void)
 
     return TARGET_OK;
 }
+#else
+static bool Target_ProgramBin(void)
+{
+    uint8_t fbuf[256];
+    size_t readcount = 0;
+    FRESULT res;
+    FIL file;
+    FILINFO fileInfo;
+    uint32_t address = Target_GetFlashStartAddress();
+
+    log_message("Target ProgramBin\n");
+
+    // 펌웨어 파일 정보 확인
+    res = f_stat(FIRMWARE_FILENAME_BIN, &fileInfo);
+    if (res != FR_OK)
+    {
+        log_message("Error: Firmware file not found\n");
+        return TARGET_ERROR;
+    }
+    log_message("Firmware File: %s, Size: %lu bytes\n", fileInfo.fname, fileInfo.fsize);
+
+    // 펌웨어 파일 열기
+    res = f_open(&file, FIRMWARE_FILENAME_BIN, FA_READ);
+    if (res != FR_OK)
+    {
+        log_message("Error: Could not open firmware file\n");
+        return TARGET_ERROR;
+    }
+
+    // 파일 읽기 및 플래시 쓰기
+    while (1)
+    {
+        // 파일 읽기
+        res = f_read(&file, fbuf, sizeof(fbuf), &readcount);
+        if (res != FR_OK)
+        {
+            log_message("Error: Failed to read firmware file\n");
+            f_close(&file);
+            return TARGET_ERROR;
+        }
+
+        // 파일 끝 체크
+        if (readcount == 0)
+        {
+            f_close(&file);
+            break;
+        }
+
+        // 타겟에 따라 플래시 쓰기 함수 호출
+        switch (target.TargetFamily)
+        {
+            case TARGET_STM32C0:
+                if (Target_ProgramBin_STM32C0(address, fbuf, readcount) == TARGET_OK)
+                {
+
+                }
+                else
+                {
+                	 log_message("Error: STM32C0 programming failed\n");
+                	 f_close(&file);
+                	 return TARGET_ERROR;
+                }
+                break;
+
+            default:
+                log_message("Error: Unsupported target family\n");
+                f_close(&file);
+                return TARGET_ERROR;
+        }
+
+        // 다음 주소 갱신
+        address += readcount;
+    }
+
+    return TARGET_OK;
+}
+#endif
 
 /* Main function to program the target */
 static bool Target_Program(void)
@@ -533,7 +654,6 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 			return false;
 		}
 	}
-
 	return true;
 }
 #endif

@@ -1,2 +1,2 @@
-../Core/Programmer/util/buzzer.c:48:6:SetBuzzerFrequency	2
-../Core/Programmer/util/buzzer.c:22:6:Buzzer_SetState	7
+../Core/Programmer/util/buzzer.c:49:6:SetBuzzerFrequency	2
+../Core/Programmer/util/buzzer.c:23:6:Buzzer_SetState	7

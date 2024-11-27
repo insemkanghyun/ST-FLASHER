@@ -1,7 +1,5 @@
 Core/Programmer/util/ihex_parser.o: ../Core/Programmer/util/ihex_parser.c \
- ../Core/Programmer/util/ihex_parser.h ../Core/Programmer/target/target.h \
- ../Core/Programmer/util/led.h ../Core/Programmer/util/buzzer.h \
- ../Core/Programmer/util/button.h \
+ ../Core/Programmer/util/ihex_parser.h ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -38,8 +36,9 @@ Core/Programmer/util/ihex_parser.o: ../Core/Programmer/util/ihex_parser.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h \
- ../Core/Inc/main.h ../FATFS/App/fatfs.h \
- ../Middlewares/Third_Party/FatFs/src/ff.h \
+ ../Core/Programmer/target/target.h ../Core/Programmer/util/led.h \
+ ../Core/Programmer/util/buzzer.h ../Core/Programmer/util/button.h \
+ ../FATFS/App/fatfs.h ../Middlewares/Third_Party/FatFs/src/ff.h \
  ../Middlewares/Third_Party/FatFs/src/integer.h ../FATFS/Target/ffconf.h \
  ../FATFS/Target/bsp_driver_sd.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
@@ -50,10 +49,7 @@ Core/Programmer/util/ihex_parser.o: ../Core/Programmer/util/ihex_parser.c \
  ../Core/Programmer/swd\errors.h ../Core/Programmer/swd\delay.h \
  ../Core/Programmer/util\ihex_parser.h
 ../Core/Programmer/util/ihex_parser.h:
-../Core/Programmer/target/target.h:
-../Core/Programmer/util/led.h:
-../Core/Programmer/util/buzzer.h:
-../Core/Programmer/util/button.h:
+../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
@@ -90,7 +86,10 @@ Core/Programmer/util/ihex_parser.o: ../Core/Programmer/util/ihex_parser.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h:
-../Core/Inc/main.h:
+../Core/Programmer/target/target.h:
+../Core/Programmer/util/led.h:
+../Core/Programmer/util/buzzer.h:
+../Core/Programmer/util/button.h:
 ../FATFS/App/fatfs.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../Middlewares/Third_Party/FatFs/src/integer.h:
