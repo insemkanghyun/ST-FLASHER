@@ -1,6 +1,0 @@
-../Core/Programmer/util/FileTransferCheck.c:14:6:FileTransferCheck_Init	1
-../Core/Programmer/util/FileTransferCheck.c:20:6:FileTransferCheck_UpdateOnWrite	1
-../Core/Programmer/util/FileTransferCheck.c:36:6:FileTransferCheck_CheckCompletion	3
-../Core/Programmer/util/FileTransferCheck.c:53:9:FileTransferCheck_IsTransferComplete	1
-../Core/Programmer/util/FileTransferCheck.c:59:6:FileTransferCheck_ResetTransferCompleteFlag	1
-../Core/Programmer/util/FileTransferCheck.c:65:6:FileTransferCheck	2

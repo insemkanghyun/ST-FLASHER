@@ -7,7 +7,7 @@ extern TIM_HandleTypeDef htim1;
 volatile BuzzerState state = BUZZER_BOOT;
 
 #ifdef DEBUG_USE_BUZZER_SOUND_SMALL
-#define DEFAULT_FREQ 100
+#define DEFAULT_FREQ 50
 #else
 #define DEFAULT_FREQ 3000
 #endif

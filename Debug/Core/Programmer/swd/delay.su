@@ -1,3 +1,0 @@
-../Core/Programmer/swd/delay.c:40:6:initDelay	0	static
-../Core/Programmer/swd/delay.c:54:6:delayMs	8	static
-../Core/Programmer/swd/delay.c:62:6:delayUs	0	static

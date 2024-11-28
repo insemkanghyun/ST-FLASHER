@@ -5,6 +5,7 @@
 #include "led.h"
 #include "stm32f4xx_hal.h"
 #include "main.h"
+#include "stdbool.h"
 
 LedStatus currentState = TARGET_LED_STAT_BOOT;
 
@@ -25,62 +26,114 @@ void LED_Off(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
 }
 
+// Boot 상태 처리 함수
+void LED_HandleBootState(uint32_t *counter, uint8_t *step)
+{
+    if (*counter >= LED_TOGGLE_INTERVAL * 2)
+    {
+        *counter = 0; // 카운터 초기화
+
+        switch (*step)
+        {
+            case 0:
+                LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+                LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+                LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+                break;
+
+            case 1:
+                LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+                LED_On(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+                LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+                break;
+
+            case 2:
+                LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+                LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+                LED_On(LED_RED_GPIO_Port, LED_RED_Pin);
+                break;
+
+            case 3:
+                LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+                LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+                LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+                break;
+
+            default:
+                *step = 0; // 마지막 단계 이후 초기화
+                return;
+        }
+
+        (*step)++;
+    }
+}
+
+// Programming 상태 처리 함수
+void LED_HandleProgrammingState(uint32_t counter)
+{
+    if (counter % 100 == 0) // 빠른 토글 주기
+    {
+        LED_Toggle(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+    }
+
+    LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+    LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+}
+
+// Complete 상태 처리 함수
+void LED_HandleCompleteState(void)
+{
+    LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+    LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+    LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+}
+
+// Failed 상태 처리 함수
+void LED_HandleFailedState(void)
+{
+    LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+    LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+    LED_On(LED_RED_GPIO_Port, LED_RED_Pin);
+}
+
 // SysTick 인터럽트 핸들러
 void LED_Handler(void)
 {
     static uint32_t counter = 0;
+    static uint8_t step = 0; // LED 순차적 제어를 위한 단계 변수
+    static bool bootCompleted = false; // BOOT 상태 완료 여부
 
     counter += SYS_TICK_PERIOD_MS;
-    static uint8_t step = 0;  // LED 순차적 제어를 위한 단계 변수
 
-
-    switch (currentState) {
+    switch (currentState)
+    {
         case TARGET_LED_STAT_BOOT:
-            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 0) {
-            	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);   // 초록색 켜기
-            	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-            	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
-            	step++;
-            	counter = 0;  // 카운터 초기화
-            }
-            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 1) {
-            	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-            	LED_On(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);  // 주황색 켜기
-            	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
-            	step++;
-            	counter = 0;
-            }
-            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 2) {
-            	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-            	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-            	LED_On(LED_RED_GPIO_Port, LED_RED_Pin);        // 빨간색 켜기
-            	step++;
-            	counter = 0;
-            }
-            if (counter >= LED_TOGGLE_INTERVAL*2 && step == 3) {
-            	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);    // 초록색 켜고 나머지 끄기
-            	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-            	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
-            	step++;  // 마지막 단계로 진행
+            if (!bootCompleted)
+            {
+                // BOOT 상태 처리
+            	LED_HandleBootState(&counter, &step);
+
+                // BOOT 상태 완료 시 COMPLETE로 전환
+                if (step > 3) // 모든 단계 완료
+                {
+                    currentState = TARGET_LED_STAT_COMPLETE; // 상태 변경
+                    bootCompleted = true; // BOOT 완료 플래그 설정
+                }
             }
             break;
+
         case TARGET_LED_STAT_PROGRAMMING:
-            if (counter % 100 == 0) { // Fast toggle rate
-                LED_Toggle(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-            }
-          	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-          	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+        		LED_HandleProgrammingState(counter);
             break;
+
         case TARGET_LED_STAT_COMPLETE:
-        	LED_On(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-        	LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-        	LED_Off(LED_RED_GPIO_Port, LED_RED_Pin);
+        		LED_HandleCompleteState();
             break;
+
         case TARGET_LED_STAT_FAILED:
-        	LED_Off(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-          LED_Off(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
-          LED_On(LED_RED_GPIO_Port, LED_RED_Pin);
+        		LED_HandleFailedState();
             break;
+
         default:
             break;
     }

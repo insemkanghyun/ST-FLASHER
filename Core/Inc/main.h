@@ -83,10 +83,14 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 //#define DEBUG_USE_IHEX_DEBUG
-#define DEBUG_USE_BUZZER_SOUND_SMALL
 #define USE_SWD_FAST
-#define DEBUG_USE_PRINTF
+#define DEBUG_USE_BUZZER_SOUND_SMALL
+//#define DEBUG_USE_BIN_PROG_PRINT
+//#define DEBUG_USE_USB_FILE_TRANSFER_CHECK
+//#define DEBUG_USE_VERIFY_PRINT
 
+#define PROJECT_VERSION "241128"
+#define BUILD_INFO "Build Date: " __DATE__ ", Build Time: " __TIME__
 
 /* USER CODE END Private defines */
 

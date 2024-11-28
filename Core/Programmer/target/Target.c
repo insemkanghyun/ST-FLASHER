@@ -4,15 +4,14 @@
 #include "swd\utils.h"
 #include "FileTransferCheck.h"
 #include <stdarg.h>
+#include <main.h>
 
 
 Target_InfoTypeDef target = { .TargetChipErased = false };
 extern UART_HandleTypeDef huart1;
 extern RTC_HandleTypeDef hrtc;
 
-
 #define PRINTF_REDIRECTION	int __io_putchar(int ch)
-//#define printf(...) //for printf remove
 PRINTF_REDIRECTION
 {
   HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
@@ -95,7 +94,7 @@ static uint32_t Target_GetFlashStartAddress(void)
     }
 }
 
-static void Classify_STM32C0(Target_InfoTypeDef *target)
+static void Target_GetDeviceId_STM32C0(Target_InfoTypeDef *target)
 {
     target->TargetFamily = TARGET_STM32C0;
     uint32_t tmp = readMem(STM32C0_REG_DEVICE_ID);
@@ -103,7 +102,7 @@ static void Classify_STM32C0(Target_InfoTypeDef *target)
     target->TargetRevId = tmp >> 16;
 }
 
-static void Classify_STM32H7(Target_InfoTypeDef *target)
+static void Target_GetDeviceId_STM32H7(Target_InfoTypeDef *target)
 {
     target->TargetFamily = TARGET_STM32H7;
     uint32_t tmp = readMem(STM32H7_REG_DEVICE_ID);
@@ -111,7 +110,7 @@ static void Classify_STM32H7(Target_InfoTypeDef *target)
     target->TargetRevId = tmp >> 16;
 }
 
-static void Classify_Device_STM32C0(Target_InfoTypeDef *target)
+static void Target_GetDviceInfo_STM32C0(Target_InfoTypeDef *target)
 {
     switch(target->TargetDevId)
     {
@@ -127,7 +126,7 @@ static void Classify_Device_STM32C0(Target_InfoTypeDef *target)
     }
 }
 
-static void Classify_Device_STM32H7(Target_InfoTypeDef *target)
+static void Target_GetDviceInfo_STM32H7(Target_InfoTypeDef *target)
 {
     switch(target->TargetDevId)
     {
@@ -139,8 +138,8 @@ static void Classify_Device_STM32H7(Target_InfoTypeDef *target)
             break;
         case STM32H7_DEV_ID_0x483:
             log_message("STM32H72x, STM32H73x\n");
-            target->TargetIsDualBank = STM32H7_FLASH_SUPPORT_DUALBANK;
-            log_message("Flash Bank: Dual\n");
+            target->TargetIsDualBank = STM32H7_FLASH_SUPPORT_SINGLEBANK;
+            log_message("Flash Bank: Single \n");
             break;
         case STM32H7_DEV_ID_0x450:
             log_message("STM32H742, STM32H743/753, STM32H750, STM32H745/755, STM32H747/757\n");
@@ -154,16 +153,16 @@ static void Classify_Device_STM32H7(Target_InfoTypeDef *target)
     }
 }
 
-static void Target_Classify(Target_InfoTypeDef *target)
+static void Target_GetInfo(Target_InfoTypeDef *target)
 {
     /* Target Family Classify & Read Device ID */
     switch(target->TargetDpId)
     {
         case STM32C0_SWDP_ID:
-            Classify_STM32C0(target);
+        		Target_GetDeviceId_STM32C0(target);
             break;
         case STM32H7_SWDP_ID:
-            Classify_STM32H7(target);
+        		Target_GetDeviceId_STM32H7(target);
             break;
         default:
             /* Unsupported Device */
@@ -175,10 +174,10 @@ static void Target_Classify(Target_InfoTypeDef *target)
     switch(target->TargetFamily)
     {
         case TARGET_STM32C0:
-            Classify_Device_STM32C0(target);
+        		Target_GetDviceInfo_STM32C0(target);
             break;
         case TARGET_STM32H7:
-            Classify_Device_STM32H7(target);
+        		Target_GetDviceInfo_STM32H7(target);
             break;
         default:
             log_message("Unknown Target Family\n");
@@ -199,7 +198,7 @@ static bool Target_Connect(void)
   {
 		TRY
 			connectToTarget(&target);
-			Target_Classify(&target);
+			Target_GetInfo(&target);
 
 			/* Reset swdErrorIndex, it cause f_open(fatfs) hang. */
 			swdErrorIndex = 0;
@@ -294,6 +293,55 @@ static bool Target_ProgramHex(void)
     return TARGET_OK;
 }
 
+static bool Target_ProgramBin_STM32H7(uint32_t start_address, const uint8_t *data, uint32_t data_size)
+{
+    uint32_t address = start_address;
+    uint32_t chunk_size = (target.TargetDevId == 0x480) ? 16 : 32; // 0x480이면 16바이트, 아니면 32바이트
+    uint32_t remaining_size = data_size;
+
+    while (remaining_size > 0)
+    {
+        // 현재 청크 크기를 결정 (남은 데이터가 chunk_size보다 적으면 남은 만큼만 처리)
+				uint8_t buffer[32];
+				memset(buffer, 0xFF, sizeof(buffer)); // 모든 요소를 0xFF로 설정
+        uint32_t size_to_program = (remaining_size >= chunk_size) ? chunk_size : remaining_size;
+
+        // 데이터 복사
+        memcpy(buffer, data, size_to_program);
+
+#ifdef DEBUG_USE_BIN_PROG_PRINT
+        // 디버그 출력
+        log_message("STM32H7 Flash: Address 0x%08lX, Data: ", address);
+        for (uint32_t i = 0; i < 32; i++)
+        {
+        	printf("%02" PRIX16 " ", data[i]);
+        }
+        printf("\n");
+        log_message("STM32H7 Flash: Address 0x%08lX, buffer: ", address);
+        for (uint32_t i = 0; i < 32; i++)
+        {
+        	printf("%02" PRIX16 " ", buffer[i]);
+        }
+        printf("\n");
+#endif
+
+        // Stm32h7_Flash_Program 호출
+        if (Stm32h7_Flash_Program(address, (uint32_t)buffer, chunk_size) != TARGET_OK)
+        {
+            log_message("Error: Failed to program STM32H7 flash at address 0x%08lX\n", address);
+            //Stm32h7_Flash_Lock();
+            return TARGET_ERROR;
+        }
+
+        // 다음 주소 및 남은 크기 갱신
+        address += chunk_size;
+        data += size_to_program;
+        remaining_size -= size_to_program;
+    }
+
+    return TARGET_OK;
+}
+
 
 static bool Target_ProgramBin_STM32C0(uint32_t start_address, const uint8_t *data, uint32_t data_size)
 {
@@ -309,19 +357,16 @@ static bool Target_ProgramBin_STM32C0(uint32_t start_address, const uint8_t *dat
 
         // 데이터 복사 (패딩 필요 시 0xFF로 유지됨)
         memcpy(&word, data, size_to_program);
+#ifdef DEBUG_USE_BIN_PROG_PRINT
         // 주소와 데이터 출력 (데이터는 바이트 단위로)
         log_message("STM32C0 Flash: Address 0x%08lX, Data: ", address);
         for (uint32_t i = 0; i < size_to_program; i++) {
-        		log_message("%02" PRIX16 " ", data[i]);
+        	printf("%02" PRIX16 " ", data[i]);
         }
-        log_message("\n");
-
+        printf("\n");
+#endif
         // Stm32c0_Flash_Program 호출
-        if (Stm32c0_Flash_Program(address, word) == TARGET_OK)
-        {
-
-        }
-        else
+        if (Stm32c0_Flash_Program(address, word) != TARGET_OK)
         {
           log_message("Error: Failed to program STM32C0 flash at address 0x%08lX\n", address);
           Stm32c0_Flash_Lock();
@@ -338,96 +383,6 @@ static bool Target_ProgramBin_STM32C0(uint32_t start_address, const uint8_t *dat
 
 
 /* Function to program BIN files */
-#if 1
-static bool Target_ProgramBin(void)
-{
-    uint8_t fbuf[256];
-    size_t readcount = 0;
-    FRESULT res;
-    FIL file;
-    FILINFO fileInfo;
-    uint32_t address = Target_GetFlashStartAddress(); // Starting address for binary programming
-
-    /* Get file info */
-    res = f_stat(FIRMWARE_FILENAME_BIN, &fileInfo);
-    if (res != FR_OK)
-    {
-        log_message("f_stat error\n");
-        return TARGET_ERROR;
-    }
-    log_message("Firmware File Information\n");
-    log_message("(1) File name: %s\n", fileInfo.fname);
-    log_message("(2) File size: %lu bytes\n", fileInfo.fsize);
-
-    /* Open the BIN file */
-    res = f_open(&file, FIRMWARE_FILENAME_BIN, FA_READ);
-    if (res != FR_OK)
-    {
-        log_message("f_open error\n");
-        return TARGET_ERROR;
-    }
-
-    /* Program the BIN file */
-    while (1)
-    {
-        /* Read from the file */
-        res = f_read(&file, fbuf, sizeof(fbuf), &readcount);
-        if (res != FR_OK)
-        {
-            log_message("f_read error\n");
-            f_close(&file);
-            return TARGET_ERROR;
-        }
-
-        /* End of file */
-        if (readcount == 0)
-        {
-            if(target.TargetFamily == TARGET_STM32H7) // STM32H7 Dummy Callback
-            {
-                Target_ProgramCallback[target.TargetFamily](0, 0, 0);
-            }
-            res = f_close(&file);
-            if (res != FR_OK)
-            {
-                log_message("f_close error\n");
-                return TARGET_ERROR;
-            }
-            break;
-        }
-        else
-        {
-            size_t i = 0;
-            uint32_t current_address = address;
-
-            while (i < readcount)
-            {
-                /* Determine the size to process (up to 16 bytes) */
-                size_t chunk_size = (readcount - i) >= 16 ? 16 : (readcount - i);
-
-                /* Fill the remaining buffer with 0xFF if chunk_size is less than 16 */
-                if (chunk_size < 16)
-                {
-                    memset(&fbuf[i + chunk_size], 0xFF, 16 - chunk_size);
-                }
-
-                /* Call the programming function */
-                if (!Target_ProgramCallback[target.TargetFamily](current_address, &fbuf[i], 16))
-                {
-                    log_message("Flash write error\n");
-                    f_close(&file);
-                    return TARGET_ERROR;
-                }
-
-                current_address += 16;
-                i += chunk_size;
-            }
-            address = current_address; // Update the base address for next read
-        }
-    }
-
-    return TARGET_OK;
-}
-#else
 static bool Target_ProgramBin(void)
 {
     uint8_t fbuf[256];
@@ -479,15 +434,20 @@ static bool Target_ProgramBin(void)
         switch (target.TargetFamily)
         {
             case TARGET_STM32C0:
-                if (Target_ProgramBin_STM32C0(address, fbuf, readcount) == TARGET_OK)
+                if (Target_ProgramBin_STM32C0(address, fbuf, readcount) != TARGET_OK)
                 {
-
+									 log_message("Error: STM32C0 programming failed\n");
+									 f_close(&file);
+									 return TARGET_ERROR;
                 }
-                else
+                break;
+
+            case TARGET_STM32H7:
+                if (Target_ProgramBin_STM32H7(address, fbuf, readcount) != TARGET_OK)
                 {
-                	 log_message("Error: STM32C0 programming failed\n");
-                	 f_close(&file);
-                	 return TARGET_ERROR;
+                    log_message("Error: STM32H7 programming failed\n");
+                    f_close(&file);
+                    return TARGET_ERROR;
                 }
                 break;
 
@@ -503,7 +463,6 @@ static bool Target_ProgramBin(void)
 
     return TARGET_OK;
 }
-#endif
 
 /* Main function to program the target */
 static bool Target_Program(void)
@@ -594,42 +553,10 @@ static bool Target_MassErase(void)
 	return TARGET_OK;
 }
 
-#if 0
-static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
-{
-	uint64_t tmp[4] = {0, 0, 0, 0};
-	bool status = TARGET_OK;
-
-	/* Check valid flash address */
-	/* To be implement */
-
-	/* Convert Hex parsed data (uint8_t, Byte) to uint64_t(Double Word) */
-	/* STM32C0 Flash Double Word Program Support(Standard) */
-  for (int i = 0; i < 4; i++) {
-  	tmp[i] = ((uint64_t*)buf)[i];
-  }
-
-  /*Flash programming double word */
-  for(uint32_t i = 0; i < 4; i++)
-	{
-		status = Stm32c0_Flash_Program(addr + (i*8), tmp[i]);
-		if(status != TARGET_OK)
-		{
-			Stm32c0_Flash_Lock();
-			return false;
-		}
-		/* If bufsize only one Double word, quit loop */
-			if (bufsize <= (i + 1) * 8)
-			break;
-	}
-
-	return true;
-}
-#else
 static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
 	uint64_t tmp;
-	bool status = TARGET_OK;
+	bool status = true;
 
 	/* Flash programming double word */
 	for (uint32_t i = 0; i < bufsize; i += 8)
@@ -638,7 +565,8 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 		tmp = 0xFFFFFFFFFFFFFFFF;
 
 		// 남은 바이트가 8바이트 미만일 경우, 전체를 0xFF으로 패딩 처리
-		if (bufsize - i >= 8) {
+		if (bufsize - i >= 8)
+		{
 			// 8바이트 단위로 변환
 			tmp = ((uint64_t*)(&buf[i]))[0];
 		} else {
@@ -656,7 +584,6 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 	}
 	return true;
 }
-#endif
 
 // Callback function to program the Stm32h7 flash memory
 static bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data, uint8_t data_size)
@@ -747,7 +674,7 @@ static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t buf
   /* Compare Hex & Flash Data */
   for(int i = 0; i < bufsize; i++)
   {
-#if 0 //debug message
+#if DEBUG_USE_VERIFY_PRINT
       log_message("Address: 0x%08"PRIX32"\n", (addr + i));
       log_message("Flash: 0x%02"PRIX16", BIN File: 0x%02"PRIX16"\n", tmp[i], buf[i]);
 #endif
@@ -1264,7 +1191,6 @@ void Target_MainLoop(void)
 
   	log_message("Target program completed\n");
 
-  	/* Need some debug... not working */
   	log_message("Target Application Start!\n");
   	resetTarget();
   	hardResetTarget();
