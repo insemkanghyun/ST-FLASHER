@@ -650,7 +650,7 @@ static bool Target_ProgramCallback_STM32H7(uint32_t address, const uint8_t *data
     return true;
 }
 
-//작업필요,, 버퍼 사이즈가 32일 경우에는 어떻게 동작?
+#if 1
 static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
 {
   uint8_t tmp[32];
@@ -687,6 +687,44 @@ static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t buf
   }
   return true;
 }
+#else
+static bool Target_VerifyCallback(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
+{
+    uint32_t flash_words[8];  // Up to 32 bytes of data (8 words * 4 bytes per word)
+    int total_words = (bufsize + 3) / 4;  // Number of 32-bit words needed
+
+    /* Step 1: Read flash memory data */
+    for (int i = 0; i < total_words; i++)
+    {
+        flash_words[i] = readMem(addr + (i * 4));  // Read each 32-bit word from flash
+    }
+
+    /* Step 2: Compare buffer with flash data */
+    for (int i = 0; i < bufsize; i++)
+    {
+        // Extract the corresponding byte from flash_words
+        uint8_t flash_byte = (flash_words[i / 4] >> ((i % 4) * 8)) & 0xFF;
+
+#if DEBUG_USE_VERIFY_PRINT
+        // Debug print for address and values being compared
+        log_message("Address: 0x%08"PRIX32"\n", (addr + i));
+        log_message("Flash: 0x%02"PRIX16", BIN File: 0x%02"PRIX16"\n", flash_byte, buf[i]);
+#endif
+
+        // Compare flash byte with buffer byte
+        if (flash_byte != buf[i])
+        {
+            // Log mismatch details and return failure
+            log_message("Verification failed at address 0x%08"PRIX32"\n", (addr + i));
+            log_message("Value is 0x%02"PRIX16", should have been 0x%02"PRIX16"\n", flash_byte, buf[i]);
+            return false;
+        }
+    }
+
+    /* Verification successful */
+    return true;
+}
+#endif
 
 /* Function to verify HEX files */
 static bool Target_VerifyHex(void)

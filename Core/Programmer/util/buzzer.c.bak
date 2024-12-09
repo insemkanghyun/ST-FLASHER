@@ -1,14 +1,16 @@
 #include <stdint.h>
 #include "buzzer.h"
 #include "stm32f4xx_hal.h"
-
-
+#include "main.h"
 
 extern TIM_HandleTypeDef htim1;
-
-
-
 volatile BuzzerState state = BUZZER_BOOT;
+
+#ifdef DEBUG_USE_BUZZER_SOUND_SMALL
+#define DEFAULT_FREQ 1
+#else
+#define DEFAULT_FREQ 3000
+#endif
 
 
 static void SetBuzzerFrequency(uint32_t frequency);
@@ -20,6 +22,7 @@ static void PlayIdleSound(void);
 
 void Buzzer_SetState(BuzzerState state)
 {
+
 	switch(state)
 	{
 		case BUZZER_BOOT:
@@ -45,19 +48,28 @@ void Buzzer_SetState(BuzzerState state)
 
 void SetBuzzerFrequency(uint32_t frequency) {
     if (frequency > 0) {
+        // 타이머 주기 계산: 타이머 클럭(1MHz)에서 원하는 주파수를 설정
         uint32_t period = (1000000 / frequency) - 1;
-        htim1.Init.Period = period;
-        HAL_TIM_PWM_Init(&htim2);
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, period / 2);
+
+        // 주기(ARR)를 설정하여 타이머의 PWM 주파수를 조정
+        __HAL_TIM_SET_AUTORELOAD(&htim1, period);
+
+        // 듀티 사이클을 50%로 설정 (부저가 50% 듀티에서 동작하도록)
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, period / 2);
+
+        // 타이머 PWM 시작
+        HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
     } else {
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0); // Turn off buzzer
+        // 주파수가 0이면 부저를 끕니다
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0); // Turn off buzzer
+        HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
     }
 }
 
 void PlayBootSound(void)
 {
 		/* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(500);
@@ -69,7 +81,7 @@ void PlayBootSound(void)
 void PlayDuringProgrammingSound(void)
 {
 		/* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(150);
@@ -81,7 +93,7 @@ void PlayDuringProgrammingSound(void)
 void PlayProgrammingCompleteSound(void)
 {
 		/* Set Frequency */
-    SetBuzzerFrequency(5000);
+    SetBuzzerFrequency(DEFAULT_FREQ);
 
     /* Set Duration */
     HAL_Delay(300);
@@ -90,24 +102,15 @@ void PlayProgrammingCompleteSound(void)
     SetBuzzerFrequency(0);
 
     /* Set Duration */
-    HAL_Delay(300);
-
-    /* Set Frequency */
-    SetBuzzerFrequency(5000);
-
-    /* Set Duration */
-    HAL_Delay(300);
-
-    /* Buzzer Off */
-    SetBuzzerFrequency(0);
+    //HAL_Delay(300);
 }
 
 void PlayProgrammingFailedSound(void){
 
-    for (uint8_t i = 0; i < 6; i++)
+    for (uint8_t i = 0; i < 5; i++)
     {
     		/* Set Frequency */
-        SetBuzzerFrequency(5000);
+        SetBuzzerFrequency(DEFAULT_FREQ);
 
         /* Set Duration */
         HAL_Delay(150);

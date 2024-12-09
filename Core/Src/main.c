@@ -127,7 +127,7 @@ int main(void)
 	LED_SetState(TARGET_LED_STAT_BOOT);
 	Buzzer_SetState(BUZZER_BOOT);
 
-	log_message("ST-FLASHER Boot OK! v%d\n", PROJECT_VERSION);
+	log_message("ST-FLASHER Boot OK! %s\n", PROJECT_VERSION);
 	log_message("%s\n", BUILD_INFO);
 
   /* USER CODE END 2 */

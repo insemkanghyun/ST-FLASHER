@@ -200,7 +200,7 @@ static uint32_t writeReg(bool ap, int reg, uint32_t data, bool ignoreAck)
   SWD_WRITE_BIT(1);
   
   SWDIO_SET_INPUT();
-  
+
   /* Turnaround */
   SWCLK_CYCLE();
   

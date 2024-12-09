@@ -268,7 +268,7 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
   int8_t ret = -1;
   uint32_t timeout = 100000;
 
-  if (BSP_SD_IsDetected() != SD_NOT_PRESENT)
+       if (BSP_SD_IsDetected() != SD_NOT_PRESENT)
   {
     BSP_SD_ReadBlocks_DMA((uint32_t *) buf, blk_addr, blk_len);
 
@@ -327,7 +327,7 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     }
     ret = 0;
   }
-  // ?ƒ?ƒœ ì´ˆê¸°?™”: ?“°ê¸? ?‹¤?Œ¨ ?‹œ ?ƒ?ƒœë¥? IDLEë¡? ë¦¬ì…‹
+  // ?ï¿½ï¿½?ï¿½ï¿½ ì´ˆê¸°?ï¿½ï¿½: ?ï¿½ï¿½ï¿??? ?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ï¿??? IDLEï¿??? ë¦¬ì…‹
   FileTransferCheck_Init();
   return ret;
   /* USER CODE END 7 */

@@ -232,8 +232,8 @@
 //#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
 //#define SWDIO_SET_INPUT()	LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 /* For 3rd PCB */
-#define SWDIO_SET_OUTPUT()	 HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
-#define SWDIO_SET_INPUT()	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
+#define SWDIO_SET_OUTPUT()	 HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET);  delayUs(1);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+#define SWDIO_SET_INPUT()	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET); delayUs(1);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 #else
 void swdio_in_mode(void);
 void swdio_out_mode(void);
@@ -296,14 +296,23 @@ if ( bit ) { \
      
 #else
 
+#if 0//gbkim
 #define SWD_WRITE_BIT(bit)  \
   SWDIO_OUT(bit)        \
   SWCLK_CLR();          \
   SWCLK_SET();          
+#else
+#define SWD_WRITE_BIT(bit)  \
+  SWCLK_CLR();          \
+  SWDIO_OUT(bit);        \
+  delayUs(1);\
+  SWCLK_SET()
+#endif
 
 #define SWD_READ_BIT(bit)   \
   SWCLK_CLR();          \
   bit = SWDIO_IN();     \
+  delayUs(1);\
   SWCLK_SET()          
 
 #endif

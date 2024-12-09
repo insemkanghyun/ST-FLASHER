@@ -63,6 +63,12 @@ default.size.stdout \
 OBJDUMP_LIST += \
 ST-FLASHER.list \
 
+OBJCOPY_HEX += \
+ST-FLASHER.hex \
+
+OBJCOPY_BIN += \
+ST-FLASHER.bin \
+
 
 # All Target
 all: main-build
@@ -86,12 +92,22 @@ ST-FLASHER.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+ST-FLASHER.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "ST-FLASHER.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+ST-FLASHER.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "ST-FLASHER.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) ST-FLASHER.elf ST-FLASHER.list ST-FLASHER.map default.size.stdout
+	-$(RM) ST-FLASHER.bin ST-FLASHER.elf ST-FLASHER.hex ST-FLASHER.list ST-FLASHER.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
