@@ -180,9 +180,19 @@
 #include "main.h"
 
 
-
+// @Cortex-M4 120MHz, gcc optimization -o1
+/*
+ * CYCLE_CNT: 1		// 6.329 MHz
+ * CYCLE_CNT: 10	// 3.247 MHz
+ * CYCLE_CNT: 20	// 1.429 MHz
+ * CYCLE_CNT: 50	// 709.2 KHz
+ * CYCLE_CNT: 100	// 375.9 kHz
+ * CYCLE_CNT: 200	// 196.9 kHz
+ * CYCLE_CNT: 400	// 100.0 kHz
+ * CYCLE_CNT: 800	// 42.74 kHz
+ */
 #ifdef USE_SWD_FAST
-#define CYCLE_CNT 50 //Stable: 100 cycle // Fast but unstable: 1 cycle
+#define CYCLE_CNT 1  //Stable: 100 cycle // Fast but unstable: 1 cycle
 #define BUFFER_DLY 1//Cycles: Don't Care
 /* For 2nd PCB */
 //#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);

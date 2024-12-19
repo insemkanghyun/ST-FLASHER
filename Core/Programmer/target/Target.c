@@ -1216,6 +1216,46 @@ static void Target_FlashLock(void)
   }
 }
 
+// CYCLE_CNT로 SWD 속도를 계산하고 로그 출력
+static void Target_PrintSWDFrequency(int cycle_cnt) {
+    float frequency;
+    switch (cycle_cnt) {
+        case 1:
+            frequency = 6.329e6; // 6.329 MHz
+            break;
+        case 10:
+            frequency = 3.247e6; // 3.247 MHz
+            break;
+        case 20:
+            frequency = 1.429e6; // 1.429 MHz
+            break;
+        case 50:
+            frequency = 709.2e3; // 709.2 kHz
+            break;
+        case 100:
+            frequency = 375.9e3; // 375.9 kHz
+            break;
+        case 200:
+            frequency = 196.9e3; // 196.9 kHz
+            break;
+        case 400:
+            frequency = 100.0e3; // 100.0 kHz
+            break;
+        case 800:
+            frequency = 42.74e3; // 42.74 kHz
+            break;
+        default:
+            log_message("Invalid CYCLE_CNT: %d\n", cycle_cnt);
+            return;
+    }
+
+    if (frequency >= 1e6) {
+        log_message("SWD Frequency: %.1f MHz\n", frequency / 1e6);
+    } else {
+        log_message("SWD Frequency: %.0f kHz\n", frequency / 1e3);
+    }
+}
+
 void Target_MainLoop(void)
 {
 	bool status = TARGET_ERROR;
@@ -1237,6 +1277,7 @@ void Target_MainLoop(void)
   	u32_StartTime = HAL_GetTick();
 
   	/* Target flash operation */
+  	Target_PrintSWDFrequency(CYCLE_CNT);
   	status = Target_Connect();
   	Target_ErrorHandle(status, "Target Connect Error");
   	if(status != TARGET_OK) return;
