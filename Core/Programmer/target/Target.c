@@ -7,7 +7,7 @@
 #include <main.h>
 
 
-Target_InfoTypeDef target = { .TargetChipErased = false };
+Target_InfoTypeDef target;
 extern UART_HandleTypeDef huart1;
 extern RTC_HandleTypeDef hrtc;
 
@@ -236,6 +236,19 @@ static bool Target_ProgramHex(void)
     log_message("Firmware File Information\n");
     log_message("(1) File name: %s\n", fileInfo.fname);
     log_message("(2) File size: %lu bytes\n", fileInfo.fsize);
+    // 날짜 정보 추출
+    uint16_t year = 1980 + ((fileInfo.fdate >> 9) & 0x7F); // 상위 7비트
+    uint8_t month = (fileInfo.fdate >> 5) & 0x0F;           // 중간 4비트
+    uint8_t day = fileInfo.fdate & 0x1F;                   // 하위 5비트
+
+    // 시간 정보 추출
+    uint8_t hour = (fileInfo.ftime >> 11) & 0x1F;          // 상위 5비트
+    uint8_t minute = (fileInfo.ftime >> 5) & 0x3F;         // 중간 6비트
+    uint8_t second = (fileInfo.ftime & 0x1F) * 2;          // 하위 5비트 * 2 (초 단위)
+
+    // 수정된 날짜와 시간 출력
+    log_message("(3) Last Modified Date: %04d-%02d-%02d\n", year, month, day);
+    log_message("(4) Last Modified Time: %02d:%02d:%02d\n", hour, minute, second);
 
     /* Open the HEX file */
     res = f_open(&file, FIRMWARE_FILENAME_HEX, FA_READ);
@@ -394,14 +407,29 @@ static bool Target_ProgramBin(void)
 
     log_message("Target ProgramBin\n");
 
-    // 펌웨어 파일 정보 확인
+    /* Get file info */
     res = f_stat(FIRMWARE_FILENAME_BIN, &fileInfo);
     if (res != FR_OK)
     {
-        log_message("Error: Firmware file not found\n");
+        log_message("f_stat error\n");
         return TARGET_ERROR;
     }
-    log_message("Firmware File: %s, Size: %lu bytes\n", fileInfo.fname, fileInfo.fsize);
+    log_message("Firmware File Information\n");
+    log_message("(1) File name: %s\n", fileInfo.fname);
+    log_message("(2) File size: %lu bytes\n", fileInfo.fsize);
+    // 날짜 정보 추출
+    uint16_t year = 1980 + ((fileInfo.fdate >> 9) & 0x7F); // 상위 7비트
+    uint8_t month = (fileInfo.fdate >> 5) & 0x0F;           // 중간 4비트
+    uint8_t day = fileInfo.fdate & 0x1F;                   // 하위 5비트
+
+    // 시간 정보 추출
+    uint8_t hour = (fileInfo.ftime >> 11) & 0x1F;          // 상위 5비트
+    uint8_t minute = (fileInfo.ftime >> 5) & 0x3F;         // 중간 6비트
+    uint8_t second = (fileInfo.ftime & 0x1F) * 2;          // 하위 5비트 * 2 (초 단위)
+
+    // 수정된 날짜와 시간 출력
+    log_message("(3) Last Modified Date: %04d-%02d-%02d\n", year, month, day);
+    log_message("(4) Last Modified Time: %02d:%02d:%02d\n", hour, minute, second);
 
     // 펌웨어 파일 열기
     res = f_open(&file, FIRMWARE_FILENAME_BIN, FA_READ);
@@ -497,6 +525,24 @@ static bool Target_Program(void)
     }
 }
 
+static bool Target_FlashEmptyCheck(void)
+{
+    uint32_t startAddr = Target_GetFlashStartAddress();
+
+    // 첫 두 워드(32비트 * 2)만 검사
+    if ((readMem(startAddr) == 0xFFFFFFFF) &&
+        (readMem(startAddr + 4) == 0xFFFFFFFF))
+    {
+    		log_message("Flash empty check: Empty.\n");
+        return TARGET_OK; // EMPTY 상태
+    }
+    else
+    {
+    	log_message("Flash empty check: Not empty.\n");
+        return TARGET_ERROR; // 데이터 존재
+    }
+}
+
 static void Target_MassErase_STM32C0(void)
 {
     Stm32c0_Flash_Unlock();
@@ -527,8 +573,6 @@ static void Target_MassErase_STM32H7(bool isDualBank)
 
 static bool Target_MassErase(void)
 {
-	if(target.TargetChipErased  == 0)
-	{
     log_message("Target MassErase\n");
     switch(target.TargetFamily)
     {
@@ -540,15 +584,9 @@ static bool Target_MassErase(void)
             break;
         default:
             log_message("Unsupported Target Family for Mass Erase\n");
-            return false;
+            return TARGET_ERROR;
     }
     log_message("Target MassErase Done.\n");
-	}
-	else
-	{
-		log_message("No need to mass erase(RDP Regression).\n");
-		target.TargetChipErased = 0;
-	}
 
 	return TARGET_OK;
 }
@@ -963,7 +1001,6 @@ static bool Target_Protection_Unlock_STM32H7(void)
 
         Option_Status = readMem(STM32H7_FLASH_OPTSR_CUR);
         log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32H7_FLASH_OPTSR_RDP_Msk);
-        target.TargetChipErased = 1;
     }
     else if(Option_Status == STM32H7_FLASH_OB_RDP_LEVEL_0)
     {
@@ -1004,7 +1041,6 @@ static bool Target_Protection_Unlock_STM32C0(void)
 
         Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR);
         log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32C0_FLASH_OPTR_RDP_Msk);
-        target.TargetChipErased = 1;
     }
     else if(Option_Status == STM32C0_OB_RDP_LEVEL_0)
     {
@@ -1209,9 +1245,19 @@ void Target_MainLoop(void)
   	Target_ErrorHandle(status, "Target Protection Unlock Error");
   	if(status != TARGET_OK) return;
 
-  	status = Target_MassErase();
-  	Target_ErrorHandle(status, "Target MassErase Error");
-  	if(status != TARGET_OK) return;
+    /* Check if flash is empty after RDP unlock */
+    status = Target_FlashEmptyCheck();
+    if (status == TARGET_OK)
+    {
+        log_message("Flash is empty after RDP unlock. Skipping mass erase.\n");
+    }
+    else
+    {
+        /* Perform mass erase if flash is not empty */
+        status = Target_MassErase();
+        Target_ErrorHandle(status, "Target MassErase Error");
+        if (status != TARGET_OK) return;
+    }
 
   	Target_FlashUnlock();
   	status = Target_Program();

@@ -516,19 +516,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PROGRAM_BTN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SWD_BUF_DIR_Pin SWD_CLK_Pin */
-  GPIO_InitStruct.Pin = SWD_BUF_DIR_Pin|SWD_CLK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SWD_IO_Pin */
-  GPIO_InitStruct.Pin = SWD_IO_Pin;
+  /*Configure GPIO pins : SWD_BUF_DIR_Pin SWD_IO_Pin */
+  GPIO_InitStruct.Pin = SWD_BUF_DIR_Pin|SWD_IO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SWD_CLK_Pin */
+  GPIO_InitStruct.Pin = SWD_CLK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(SWD_CLK_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

@@ -43,6 +43,18 @@
 static uint32_t selectionAlertSequence[] = { 0x6209F392, 0x86852D95, 0xE3DDAFE9, 0x19BC0EA2};
 static uint32_t activationCode = 0x1A;
 
+static inline void PIN_DELAY(uint32_t cycles) {
+    cycles = (cycles + 1) / 2;  // 입력값을 2로 나눠서 보정 (올림 처리)
+
+    __asm__ __volatile__(
+        "1: subs %[cnt], %[cnt], #1 \n"   // cycles -= 1
+        "   bne 1b             \n"       // 값이 0이 아니면 반복
+        : [cnt] "+r" (cycles)            // 입력/출력 제약조건
+        :                                // 입력 없음
+        : "cc"                           // 조건 코드 플래그 영향을 알림
+    );
+}
+
 
 /**********************************************************
  * Reads from an AP or DP register.

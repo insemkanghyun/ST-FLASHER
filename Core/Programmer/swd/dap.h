@@ -134,33 +134,6 @@
 #define AAP_STATUS_ERASEBUSY 1
 
 
-/* Default pin configuration is provided
- * for EFM32GG-STK3700 and EFM32GG-DK3750.
- * Change these defines to select other pins. 
- * Note that in order to perform the 
- * Gecko Unlock Sequence, the pins PE8,PE9
- * MUST be used for SWCLK,SWDIO.
- */
-#if defined(STK)
-
-#define SWCLK_PORT 3
-#define SWCLK_PIN  0
-#define SWDIO_PORT 3
-#define SWDIO_PIN  1
-#define RESET_PORT 2
-#define RESET_PIN  0
-
-#else
-
-#define SWCLK_PORT 4
-#define SWCLK_PIN  8
-#define SWDIO_PORT 4
-#define SWDIO_PIN  9
-#define RESET_PORT 2
-#define RESET_PIN  0
-
-#endif
-
 
 
 /* Number of times to retry an SWD operation when receiving 
@@ -201,39 +174,22 @@
 
     
 
-#if 0
-#if (SWDIO_PIN < 8)
-#define SWDIO_SET_INPUT() { \
-    GPIO->P[SWDIO_PORT].MODEL = (GPIO->P[SWDIO_PORT].MODEL & ~(0xf << 4 * SWDIO_PIN)) | (0x1 << (4 * SWDIO_PIN)); \
-    GPIO->P[SWDIO_PORT].DOUT &=  ~(1 << SWDIO_PIN); }
-#else 
-#define SWDIO_SET_INPUT() { \
-    GPIO->P[SWDIO_PORT].MODEH = (GPIO->P[SWDIO_PORT].MODEH & ~(0xf << 4 * (SWDIO_PIN-8))) | (0x1 << (4 * (SWDIO_PIN-8))); \
-    GPIO->P[SWDIO_PORT].DOUT &=  ~(1 << SWDIO_PIN); }
-#endif
 
-#if (SWDIO_PIN < 8)
-#define SWDIO_SET_OUTPUT() { \
-    GPIO->P[SWDIO_PORT].MODEL = (GPIO->P[SWDIO_PORT].MODEL & ~(0xf << 4 * SWDIO_PIN)) | (0x4 << (4 * SWDIO_PIN)); \
-    GPIO->P[SWDIO_PORT].DOUT &=  ~(1 << SWDIO_PIN); }    
-#else
-#define SWDIO_SET_OUTPUT() { \
-    GPIO->P[SWDIO_PORT].MODEH = (GPIO->P[SWDIO_PORT].MODEH & ~(0xf << 4 * (SWDIO_PIN-8))) | (0x4 << (4 * (SWDIO_PIN-8))); \
-    GPIO->P[SWDIO_PORT].DOUT &=  ~(1 << SWDIO_PIN); }    
-#endif
-#endif
 
 #include "stm32f4xx_ll_gpio.h"
 #include "main.h"
 
 
+
 #ifdef USE_SWD_FAST
+#define CYCLE_CNT 50 //Stable: 100 cycle // Fast but unstable: 1 cycle
+#define BUFFER_DLY 1//Cycles: Don't Care
 /* For 2nd PCB */
 //#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
 //#define SWDIO_SET_INPUT()	LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 /* For 3rd PCB */
-#define SWDIO_SET_OUTPUT()	 HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET);  delayUs(1);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
-#define SWDIO_SET_INPUT()	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET); delayUs(1);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
+#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_4);  PIN_DELAY(BUFFER_DLY);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+#define SWDIO_SET_INPUT()		LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_4);	PIN_DELAY(BUFFER_DLY);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 #else
 void swdio_in_mode(void);
 void swdio_out_mode(void);
@@ -263,7 +219,9 @@ void swdio_out_mode(void);
 
 #define SWCLK_CYCLE()   \
   SWCLK_CLR();          \
-  SWCLK_SET()
+  PIN_DELAY(CYCLE_CNT);	\
+  SWCLK_SET();					\
+  PIN_DELAY(CYCLE_CNT);
 
 #define SWDIO_CYCLE()   \
   SWDIO_SET();          \
@@ -278,46 +236,59 @@ void swdio_out_mode(void);
  * to this port since the macros write to the 
  * entire port at once.
  */
-#if 0
 
-#define SWD_WRITE_BIT(bit) \
-if ( bit ) { \
-  GPIO->P[SWDIO_PORT].DOUT = (1 << SWDIO_PIN); \
-  GPIO->P[SWDIO_PORT].DOUT = (1 << SWDIO_PIN) | (1 << SWCLK_PIN); \
-} else { \
-  GPIO->P[SWDIO_PORT].DOUT = 0;  \
-  GPIO->P[SWDIO_PORT].DOUT = 1 << SWCLK_PIN; \
-}
 
-#define SWD_READ_BIT(bit)                           \
-  GPIO->P[SWCLK_PORT].DOUT = 0;                 \
-  bit = SWDIO_IN();                             \
-  GPIO->P[SWCLK_PORT].DOUT = 1 << SWCLK_PIN  
-     
-#else
+#define SWD_WRITE_BIT(bit)  \
+  SWCLK_CLR();          \
+  SWDIO_OUT(bit)        \
+  PIN_DELAY(CYCLE_CNT);	\
+  SWCLK_SET();          \
+	PIN_DELAY(CYCLE_CNT);
+#define SWD_READ_BIT(bit)   \
+  SWCLK_CLR();          \
+	PIN_DELAY(CYCLE_CNT);					\
+  bit = SWDIO_IN();     \
+  SWCLK_SET();					\
+  PIN_DELAY(CYCLE_CNT);
 
-#if 0//gbkim
+
+#if 0 //https://github.com/ARM-software/CMSIS-DAP/blob/main/Firmware/Source/SW_DP.c
 #define SWD_WRITE_BIT(bit)  \
   SWDIO_OUT(bit)        \
   SWCLK_CLR();          \
-  SWCLK_SET();          
-#else
-#define SWD_WRITE_BIT(bit)  \
+  PIN_DELAY(CYCLE_CNT);	\
+  SWCLK_SET();          \
+	PIN_DELAY(CYCLE_CNT);
+#define SWD_READ_BIT(bit)   \
   SWCLK_CLR();          \
-  SWDIO_OUT(bit);        \
-  delayUs(1);\
-  SWCLK_SET()
+	PIN_DELAY(CYCLE_CNT);					\
+  bit = SWDIO_IN();     \
+  SWCLK_SET();					\
+  PIN_DELAY(CYCLE_CNT);
 #endif
 
+#if 0 //gbkim code SWDIO_OUT <-> SWCLK_CLR // Swapped
+#define SWD_WRITE_BIT(bit)  \
+	SWCLK_CLR();          \
+	SWDIO_OUT(bit)        \
+  SWCLK_SET();
 #define SWD_READ_BIT(bit)   \
   SWCLK_CLR();          \
   bit = SWDIO_IN();     \
-  delayUs(1);\
-  SWCLK_SET()          
-
+  SWCLK_SET();
 #endif
 
-      
+#if 0 // SillconLabs Original
+#define SWD_WRITE_BIT(bit)  \
+	SWDIO_OUT(bit)        \
+	SWCLK_CLR();          \
+  SWCLK_SET();
+#define SWD_READ_BIT(bit)   \
+  SWCLK_CLR();          \
+  bit = SWDIO_IN();     \
+  SWCLK_SET();
+#endif
+
 
 void JTAG_to_SWD_Sequence(void);
 void writeAP(int reg, uint32_t data);
@@ -327,6 +298,5 @@ void readDP(int reg, uint32_t *data);
 uint32_t initDp(void);
 uint32_t readApId(void);
 void aapExtensionSequence(void);
-
 
 #endif
