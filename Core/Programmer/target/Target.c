@@ -204,12 +204,12 @@ static bool Target_Connect(void)
 			swdErrorIndex = 0;
 
     	/* Stop retrying */
-    	return TARGET_OK;
+    	//return TARGET_OK; // Disable return function in TRY/CATCH.
 		CATCH
     	log_message("SWD Error: %s\n", getErrorString(errorCode));
     	log_message("Failed to connect. Retrying...\n");
     	delayMs(200);
-    	return TARGET_ERROR;
+    	//return TARGET_ERROR; // Disable return function in TRY/CATCH.
     ENDTRY
   }
 
