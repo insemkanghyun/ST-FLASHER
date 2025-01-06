@@ -308,8 +308,6 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
 
   if (BSP_SD_IsDetected() != SD_NOT_PRESENT)
   {
-  	FileTransferCheck_UpdateOnWrite();
-
     BSP_SD_WriteBlocks_DMA((uint32_t *) buf, blk_addr, blk_len);
     /* Wait for Tx Transfer completion */
     while (usbd_WriteStatus == 0)
@@ -327,8 +325,7 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     }
     ret = 0;
   }
-  // ?ï¿½ï¿½?ï¿½ï¿½ ì´ˆê¸°?ï¿½ï¿½: ?ï¿½ï¿½ï¿???? ?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ï¿???? IDLEï¿???? ë¦¬ì…‹
-  FileTransferCheck_Init();
+
   return ret;
   /* USER CODE END 7 */
 }

@@ -133,9 +133,6 @@
 #define AAP_CMD_SYSRESETREQ 2
 #define AAP_STATUS_ERASEBUSY 1
 
-
-
-
 /* Number of times to retry an SWD operation when receiving 
  * a WAIT response */
 #define SWD_RETRY_COUNT 200
@@ -172,132 +169,40 @@
 /* JTAG to SWD bit sequence, transmitted LSB first */
 #define JTAG2SWD 0xE79E
 
-    
-
-
 
 #include "stm32f4xx_ll_gpio.h"
 #include "main.h"
 
+//2025-01-03, 22ohm impedance matching aging test
+#define SWDIO_SET_OUTPUT()		LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_4);		LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+#define SWDIO_SET_INPUT()		LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_4);	LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 
-// @Cortex-M4 120MHz, gcc optimization -o1
-/*
- * CYCLE_CNT: 1		// 6.329 MHz
- * CYCLE_CNT: 10	// 3.247 MHz
- * CYCLE_CNT: 20	// 1.429 MHz
- * CYCLE_CNT: 50	// 709.2 KHz
- * CYCLE_CNT: 100	// 375.9 kHz
- * CYCLE_CNT: 200	// 196.9 kHz
- * CYCLE_CNT: 400	// 100.0 kHz
- * CYCLE_CNT: 800	// 42.74 kHz
- */
-#ifdef USE_SWD_FAST
-#define CYCLE_CNT 1  //Stable: 100 cycle // Fast but unstable: 1 cycle
-#define BUFFER_DLY 1//Cycles: Don't Care
-/* For 2nd PCB */
-//#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
-//#define SWDIO_SET_INPUT()	LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_10); LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
-/* For 3rd PCB */
-#define SWDIO_SET_OUTPUT()	LL_GPIO_SetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_4);  PIN_DELAY(BUFFER_DLY);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
-#define SWDIO_SET_INPUT()		LL_GPIO_ResetOutputPin(SWD_BUF_DIR_GPIO_Port,LL_GPIO_PIN_4);	PIN_DELAY(BUFFER_DLY);  LL_GPIO_SetPinMode(SWD_IO_GPIO_Port, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
-#else
-void swdio_in_mode(void);
-void swdio_out_mode(void);
-#define SWDIO_SET_OUTPUT()	swdio_out_mode()
-#define SWDIO_SET_INPUT()	swdio_in_mode()
-#endif
+#define SWDIO_SET()				LL_GPIO_SetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
+#define SWDIO_CLR()				LL_GPIO_ResetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
+#define SWCLK_SET()				LL_GPIO_SetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_6)
+#define SWCLK_CLR()				LL_GPIO_ResetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_6)
 
+#define SWDIO_OUT(bit)			{if ( bit ) SWDIO_SET(); else SWDIO_CLR();}
+#define SWDIO_IN()				LL_GPIO_IsInputPinSet(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
 
-#ifdef USE_SWD_FAST
-#define SWDIO_SET() LL_GPIO_SetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
-#define SWDIO_CLR() LL_GPIO_ResetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
-#define SWCLK_SET() LL_GPIO_SetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_6)
-#define SWCLK_CLR() LL_GPIO_ResetOutputPin(SWD_IO_GPIO_Port, LL_GPIO_PIN_6)
-#else
-#define SWDIO_SET() HAL_GPIO_WritePin(SWD_IO_GPIO_Port, SWD_IO_Pin, GPIO_PIN_SET)
-#define SWDIO_CLR() HAL_GPIO_WritePin(SWD_IO_GPIO_Port, SWD_IO_Pin, GPIO_PIN_RESET)
-#define SWCLK_SET() HAL_GPIO_WritePin(SWD_CLK_GPIO_Port, SWD_CLK_Pin, GPIO_PIN_SET)
-#define SWCLK_CLR() HAL_GPIO_WritePin(SWD_CLK_GPIO_Port, SWD_CLK_Pin, GPIO_PIN_RESET)
-#endif
-
-#define SWDIO_OUT(bit) {if ( bit ) SWDIO_SET(); else SWDIO_CLR();}
-#ifdef USE_SWD_FAST
-#define SWDIO_IN() LL_GPIO_IsInputPinSet(SWD_IO_GPIO_Port, LL_GPIO_PIN_8)
-#else
-#define SWDIO_IN() HAL_GPIO_ReadPin(SWD_IO_GPIO_Port, SWD_IO_Pin)
-#endif
-
+//2025-01-03, 22ohm impedance matching aging test
 #define SWCLK_CYCLE()   \
   SWCLK_CLR();          \
-  PIN_DELAY(CYCLE_CNT);	\
-  SWCLK_SET();					\
-  PIN_DELAY(CYCLE_CNT);
+  SWCLK_SET();
 
 #define SWDIO_CYCLE()   \
   SWDIO_SET();          \
   SWDIO_CLR()
 
-
-/* If SWD_FAST is defined we compile faster versions
- * of the write and read bit macros. 
- * Note that the fast macros require that 
- * SWCLK and SWDIO is on the same GPIO port
- * and also that the RESET line is NOT connected
- * to this port since the macros write to the 
- * entire port at once.
- */
-
-
+//2025-01-03, 22ohm impedance matching aging test
 #define SWD_WRITE_BIT(bit)  \
-  SWCLK_CLR();          \
-  SWDIO_OUT(bit)        \
-  PIN_DELAY(CYCLE_CNT);	\
-  SWCLK_SET();          \
-	PIN_DELAY(CYCLE_CNT);
-#define SWD_READ_BIT(bit)   \
-  SWCLK_CLR();          \
-	PIN_DELAY(CYCLE_CNT);					\
-  bit = SWDIO_IN();     \
-  SWCLK_SET();					\
-  PIN_DELAY(CYCLE_CNT);
-
-
-#if 0 //https://github.com/ARM-software/CMSIS-DAP/blob/main/Firmware/Source/SW_DP.c
-#define SWD_WRITE_BIT(bit)  \
-  SWDIO_OUT(bit)        \
-  SWCLK_CLR();          \
-  PIN_DELAY(CYCLE_CNT);	\
-  SWCLK_SET();          \
-	PIN_DELAY(CYCLE_CNT);
-#define SWD_READ_BIT(bit)   \
-  SWCLK_CLR();          \
-	PIN_DELAY(CYCLE_CNT);					\
-  bit = SWDIO_IN();     \
-  SWCLK_SET();					\
-  PIN_DELAY(CYCLE_CNT);
-#endif
-
-#if 0 //gbkim code SWDIO_OUT <-> SWCLK_CLR // Swapped
-#define SWD_WRITE_BIT(bit)  \
-	SWCLK_CLR();          \
-	SWDIO_OUT(bit)        \
+  SWCLK_CLR();				\
+  SWDIO_OUT(bit);			\
   SWCLK_SET();
-#define SWD_READ_BIT(bit)   \
-  SWCLK_CLR();          \
-  bit = SWDIO_IN();     \
+#define SWD_READ_BIT(bit)	\
+  SWCLK_CLR();				\
+  bit = SWDIO_IN();			\
   SWCLK_SET();
-#endif
-
-#if 0 // SillconLabs Original
-#define SWD_WRITE_BIT(bit)  \
-	SWDIO_OUT(bit)        \
-	SWCLK_CLR();          \
-  SWCLK_SET();
-#define SWD_READ_BIT(bit)   \
-  SWCLK_CLR();          \
-  bit = SWDIO_IN();     \
-  SWCLK_SET();
-#endif
 
 
 void JTAG_to_SWD_Sequence(void);

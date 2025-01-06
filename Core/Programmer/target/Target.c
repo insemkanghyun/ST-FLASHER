@@ -204,12 +204,12 @@ static bool Target_Connect(void)
 			swdErrorIndex = 0;
 
     	/* Stop retrying */
-    	//return TARGET_OK; // Disable return function in TRY/CATCH.
+    	return TARGET_OK; // Disable return function in TRY/CATCH.
 		CATCH
     	log_message("SWD Error: %s\n", getErrorString(errorCode));
     	log_message("Failed to connect. Retrying...\n");
     	delayMs(200);
-    	//return TARGET_ERROR; // Disable return function in TRY/CATCH.
+    	return TARGET_ERROR; // Disable return function in TRY/CATCH.
     ENDTRY
   }
 
@@ -1063,10 +1063,11 @@ static bool Target_Protection_Unlock(void)
     switch(target.TargetFamily)
     {
         case TARGET_STM32C0:
-          return Target_Protection_Unlock_STM32C0();
+        	return Target_Protection_Unlock_STM32C0();
+
         case TARGET_STM32H7:
         	return Target_Protection_Unlock_STM32H7();
-        	break;
+
         default:
             log_message("Target family not supported for protection unlock.\n");
             break;
@@ -1216,46 +1217,6 @@ static void Target_FlashLock(void)
   }
 }
 
-// CYCLE_CNT로 SWD 속도를 계산하고 로그 출력
-static void Target_PrintSWDFrequency(int cycle_cnt) {
-    float frequency;
-    switch (cycle_cnt) {
-        case 1:
-            frequency = 6.329e6; // 6.329 MHz
-            break;
-        case 10:
-            frequency = 3.247e6; // 3.247 MHz
-            break;
-        case 20:
-            frequency = 1.429e6; // 1.429 MHz
-            break;
-        case 50:
-            frequency = 709.2e3; // 709.2 kHz
-            break;
-        case 100:
-            frequency = 375.9e3; // 375.9 kHz
-            break;
-        case 200:
-            frequency = 196.9e3; // 196.9 kHz
-            break;
-        case 400:
-            frequency = 100.0e3; // 100.0 kHz
-            break;
-        case 800:
-            frequency = 42.74e3; // 42.74 kHz
-            break;
-        default:
-            log_message("Invalid CYCLE_CNT: %d\n", cycle_cnt);
-            return;
-    }
-
-    if (frequency >= 1e6) {
-        log_message("SWD Frequency: %.1f MHz\n", frequency / 1e6);
-    } else {
-        log_message("SWD Frequency: %.0f kHz\n", frequency / 1e3);
-    }
-}
-
 void Target_MainLoop(void)
 {
 	bool status = TARGET_ERROR;
@@ -1267,62 +1228,61 @@ void Target_MainLoop(void)
 	Button_Update();
 
 	/* Check File Transfer status */
-	FileTransferCheck();
+	//FileTransferCheck();
 
 	/* Button programming start */
 	if(Button_WasPressed() == 1)
-  {
-  	LED_SetState(TARGET_LED_STAT_PROGRAMMING);
-  	Buzzer_SetState(BUZZER_PROG_START);
-  	u32_StartTime = HAL_GetTick();
+	{
+		LED_SetState(TARGET_LED_STAT_PROGRAMMING);
+		Buzzer_SetState(BUZZER_PROG_START);
+		u32_StartTime = HAL_GetTick();
 
-  	/* Target flash operation */
-  	Target_PrintSWDFrequency(CYCLE_CNT);
-  	status = Target_Connect();
-  	Target_ErrorHandle(status, "Target Connect Error");
-  	if(status != TARGET_OK) return;
+		/* Target flash operation */
+		status = Target_Connect();
+		Target_ErrorHandle(status, "Target Connect Error");
+		if(status != TARGET_OK) return;
 
-  	status = Target_Protection_Unlock();
-  	Target_ErrorHandle(status, "Target Protection Unlock Error");
-  	if(status != TARGET_OK) return;
+		status = Target_Protection_Unlock();
+		Target_ErrorHandle(status, "Target Protection Unlock Error");
+		if(status != TARGET_OK) return;
 
-    /* Check if flash is empty after RDP unlock */
-    status = Target_FlashEmptyCheck();
-    if (status == TARGET_OK)
-    {
-        log_message("Flash is empty after RDP unlock. Skipping mass erase.\n");
-    }
-    else
-    {
-        /* Perform mass erase if flash is not empty */
-        status = Target_MassErase();
-        Target_ErrorHandle(status, "Target MassErase Error");
-        if (status != TARGET_OK) return;
-    }
+		/* Check if flash is empty after RDP unlock */
+		status = Target_FlashEmptyCheck();
+		if (status == TARGET_OK)
+		{
+			log_message("Flash is empty after RDP unlock. Skipping mass erase.\n");
+		}
+		else
+		{
+			/* Perform mass erase if flash is not empty */
+			status = Target_MassErase();
+			Target_ErrorHandle(status, "Target MassErase Error");
+			if (status != TARGET_OK) return;
+		}
 
-  	Target_FlashUnlock();
-  	status = Target_Program();
-  	Target_FlashLock();
-  	Target_ErrorHandle(status, "Target Program Error");
-  	if(status != TARGET_OK) return;
+		Target_FlashUnlock();
+		status = Target_Program();
+		Target_FlashLock();
+		Target_ErrorHandle(status, "Target Program Error");
+		if(status != TARGET_OK) return;
 
-  	status = Target_Verify();
-  	Target_ErrorHandle(status, "Target Verify Error");
-  	if(status != TARGET_OK) return;
+		status = Target_Verify();
+		Target_ErrorHandle(status, "Target Verify Error");
+		if(status != TARGET_OK) return;
 
-  	status = Target_Protection_Lock();
-  	Target_ErrorHandle(status, "Target Protection Lock Error");
-  	if(status != TARGET_OK) return;
+		status = Target_Protection_Lock();
+		Target_ErrorHandle(status, "Target Protection Lock Error");
+		if(status != TARGET_OK) return;
 
-  	log_message("Target program completed\n");
+		log_message("Target program completed\n");
 
-  	log_message("Target Application Start!\n");
-  	resetTarget();
-  	hardResetTarget();
+		log_message("Target Application Start!\n");
+		resetTarget();
+		hardResetTarget();
 
-    u32_ElasedTime = HAL_GetTick() - u32_StartTime;
-    log_message("Total Elapsed Programming Time: %d ms\n\n", u32_ElasedTime);
-    LED_SetState(TARGET_LED_STAT_COMPLETE);
-    Buzzer_SetState(BUZZER_PROG_COMPLETE);
+		u32_ElasedTime = HAL_GetTick() - u32_StartTime;
+		log_message("Total Elapsed Programming Time: %d ms\n\n", u32_ElasedTime);
+		LED_SetState(TARGET_LED_STAT_COMPLETE);
+		Buzzer_SetState(BUZZER_PROG_COMPLETE);
   }
 }

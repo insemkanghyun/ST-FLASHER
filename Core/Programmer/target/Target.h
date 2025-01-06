@@ -80,7 +80,7 @@
 
 
 
-#define TARGET_OK			0
+#define TARGET_OK		0
 #define TARGET_ERROR	1
 
 typedef enum

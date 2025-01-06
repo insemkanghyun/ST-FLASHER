@@ -43,19 +43,6 @@
 static uint32_t selectionAlertSequence[] = { 0x6209F392, 0x86852D95, 0xE3DDAFE9, 0x19BC0EA2};
 static uint32_t activationCode = 0x1A;
 
-static inline void PIN_DELAY(uint32_t cycles) {
-    cycles = (cycles + 1) / 2;  // 입력값을 2로 나눠서 보정 (올림 처리)
-
-    __asm__ __volatile__(
-        "1: subs %[cnt], %[cnt], #1 \n"   // cycles -= 1
-        "   bne 1b             \n"       // 값이 0이 아니면 반복
-        : [cnt] "+r" (cycles)            // 입력/출력 제약조건
-        :                                // 입력 없음
-        : "cc"                           // 조건 코드 플래그 영향을 알림
-    );
-}
-
-
 /**********************************************************
  * Reads from an AP or DP register.
  * 
@@ -261,7 +248,7 @@ static uint32_t writeReg(bool ap, int reg, uint32_t data, bool ignoreAck)
   for ( i=0; i<8; i++ ) {
 	  SWD_WRITE_BIT(0);
   }
-  
+
   return ret;
   
 }
@@ -620,31 +607,3 @@ void initAhbAp(void)
   /* Set transfer size to 32 bit */  
   writeAP(AP_CSW, AP_CSW_DEFAULT);  
 }
-
-
-
-
-#ifdef USE_SWD_FAST
-
-#else
-void swdio_in_mode(void)
-{
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = SWD_IO_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_RESET);
-}
-
-void swdio_out_mode(void)
-{
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = SWD_IO_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(SWD_IO_GPIO_Port, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(SWD_BUF_DIR_GPIO_Port, SWD_BUF_DIR_Pin, GPIO_PIN_SET);
-}
-#endif
-
