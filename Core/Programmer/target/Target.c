@@ -1,15 +1,25 @@
+#include <stdarg.h>
+#include <main.h>
+#include <inttypes.h>
 #include "Target.h"
 #include "stm32c0_flash.h"
 #include "stm32h7_flash.h"
-#include "swd\utils.h"
 #include "FileTransferCheck.h"
-#include <stdarg.h>
-#include <main.h>
-
+#include "usbd_core.h"
+#include "led.h"
+#include "buzzer.h"
+#include "button.h"
+#include "fatfs.h"
+#include "swd\dap.h"
+#include "swd\errors.h"
+#include "swd\delay.h"
+#include "util\ihex_parser.h"
+#include "swd\utils.h"
 
 Target_InfoTypeDef target;
 extern UART_HandleTypeDef huart1;
 extern RTC_HandleTypeDef hrtc;
+extern USBD_HandleTypeDef hUsbDeviceFS;
 
 #define PRINTF_REDIRECTION	int __io_putchar(int ch)
 PRINTF_REDIRECTION
@@ -120,6 +130,15 @@ static void Target_GetDviceInfo_STM32C0(Target_InfoTypeDef *target)
         case STM32C0_DEV_ID_0x453:
             log_message("STM32C031xx\n");
             break;
+        case STM32C0_DEV_ID_0x44C:
+            log_message("STM32C051xx\n");
+            break;
+        case STM32C0_DEV_ID_0x493:
+            log_message("STM32C071xx\n");
+            break;
+        case STM32C0_DEV_ID_0x44D:
+            log_message("STM32C091xx/92xx\n");
+            break;
         default:
             log_message("Unknown STM32C0 Device ID: 0x%03X\n", target->TargetDevId);
             break;
@@ -132,7 +151,7 @@ static void Target_GetDviceInfo_STM32H7(Target_InfoTypeDef *target)
     {
         case STM32H7_DEV_ID_0x480:
             log_message("STM32H7A3/7B3/7B0\n");
-            uint32_t tmp = readMem(STM32H7_FLASH_SIZE_REG2);
+            uint32_t tmp = readMem(STM32H7_REG_FLASH_SIZE_2);
             target->TargetIsDualBank = (tmp == STM32H7_FLASH_SIZE_128KB) ? STM32H7_FLASH_SUPPORT_SINGLEBANK : STM32H7_FLASH_SUPPORT_DUALBANK;
             log_message("Flash Bank: %s\n", (target->TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK) ? "Dual" : "Single");
             break;
@@ -143,7 +162,7 @@ static void Target_GetDviceInfo_STM32H7(Target_InfoTypeDef *target)
             break;
         case STM32H7_DEV_ID_0x450:
             log_message("STM32H742, STM32H743/753, STM32H750, STM32H745/755, STM32H747/757\n");
-            tmp = readMem(STM32H7_FLASH_SIZE_REG1);
+            tmp = readMem(STM32H7_REG_FLASH_SIZE_1);
             target->TargetIsDualBank = (tmp == STM32H7_FLASH_SIZE_128KB) ? STM32H7_FLASH_SUPPORT_SINGLEBANK : STM32H7_FLASH_SUPPORT_DUALBANK;
             log_message("Flash Bank: %s\n", (target->TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK) ? "Dual" : "Single");
             break;
@@ -1172,8 +1191,8 @@ static void Target_FlashUnlock(void)
   switch(target.TargetFamily)
   {
       case TARGET_STM32C0:
-      	Stm32c0_Flash_Unlock();
-				break;
+    	  Stm32c0_Flash_Unlock();
+    	  break;
       case TARGET_STM32H7:
       		if(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK)
       		{
@@ -1184,7 +1203,7 @@ static void Target_FlashUnlock(void)
       		{
 						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
       		}
-					break;
+      		break;
       default:
           log_message("Not implemented.\n");
           break;
@@ -1233,6 +1252,9 @@ void Target_MainLoop(void)
 	/* Button programming start */
 	if(Button_WasPressed() == 1)
 	{
+		/* USB Disconnection */
+		USBD_DeInit(&hUsbDeviceFS);
+
 		LED_SetState(TARGET_LED_STAT_PROGRAMMING);
 		Buzzer_SetState(BUZZER_PROG_START);
 		u32_StartTime = HAL_GetTick();

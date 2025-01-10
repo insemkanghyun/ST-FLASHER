@@ -2,6 +2,7 @@
 #define STM32C0_FLASH_H_
 
 #include "target.h"
+#include <stdbool.h>
 
 /**
   * @brief FLASH Address

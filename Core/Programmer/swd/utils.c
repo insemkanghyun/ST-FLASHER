@@ -245,18 +245,13 @@ void waitForRegReady(void)
  **********************************************************/
 bool verifyDpId(uint32_t dpId)
 {
-  if ( dpId == STM32C0_SWDP_ID )
-  {
-    return true;
-  }
-  else if ( dpId == STM32H7_SWDP_ID )
-  {
-    return true;
-  } 
-  else 
-  {
+    if (dpId == STM32C0_SWDP_ID ||
+        dpId == STM32H7_SWDP_ID ||
+        dpId == STM32G0_SWDP_ID)
+    {
+        return true;
+    }
     return false;
-  }
 }
 
 /**********************************************************
@@ -265,20 +260,14 @@ bool verifyDpId(uint32_t dpId)
  **********************************************************/
 bool verifyAhbApId(uint32_t apId)
 {
-  if ( apId == STM32_AHBAP_ID_1 )
-  {
-    return true; // Valid for G, LG, GG, TG, WG
-  }
-  else if ( apId == STM32_AHBAP_ID_2 )
-  {
-    return true; // Valid for ZG
-  } 
-  else 
-  {
+    if (apId == STM32C0_AHBAP_ID ||
+        apId == STM32H7_AHBAP_ID ||
+        apId == STM32G0_AHBAP_ID)
+    {
+        return true;
+    }
     return false;
-  }
 }
-
 
 /**********************************************************
  * Performs the initialization sequence on the SW-DP. 

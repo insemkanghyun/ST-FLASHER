@@ -268,7 +268,7 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
   int8_t ret = -1;
   uint32_t timeout = 100000;
 
-       if (BSP_SD_IsDetected() != SD_NOT_PRESENT)
+  if (BSP_SD_IsDetected() != SD_NOT_PRESENT)
   {
     BSP_SD_ReadBlocks_DMA((uint32_t *) buf, blk_addr, blk_len);
 

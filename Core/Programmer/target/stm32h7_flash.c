@@ -1,5 +1,6 @@
 #include "stm32h7_flash.h"
 #include "utils.h"
+#include "main.h"
 
 /**
   * @brief  Wait for a FLASH operation to complete.
