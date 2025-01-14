@@ -20,24 +20,29 @@
 
 /**
   ******************************************************************************
-  * SW-DP & AHB-AP ID Code
+  * SW-DP ID Code
   ******************************************************************************
 **/
-#define STM32C0_SWDP_ID							0x0BC11477	//RM0490 / page1004
-#define STM32H7_SWDP_ID							0x6BA02477	//RM0399 / page3238
-#define STM32G0_SWDP_ID							0x0BC11477	//RM0444 / page1357
+#define STM32_SWDP_ID_1							0x0BC11477	//For STM32 C0, G0
+#define STM32_SWDP_ID_2							0x6BA02477	//For STM32 H7, U0
+
+/**
+  ******************************************************************************
+  * AHB-AP ID Code
+  ******************************************************************************
+**/
 #define STM32C0_AHBAP_ID  						0x04770031	//?????
 #define STM32H7_AHBAP_ID  						0x84770001	//RM0399 / page3251
 #define STM32G0_AHBAP_ID  						0x04770031	//?????
+#define STM32U0_AHBAP_ID  						0x84770001	//RM0503 / page1260
 
 /**
   ******************************************************************************
   * MCU Device ID Register Address
   ******************************************************************************
 **/
-#define STM32C0_REG_DEVICE_ID					0x40015800	//RM0490 / page1003
-#define STM32H7_REG_DEVICE_ID					0x5C001000	//RM0399 / page3364
-#define STM32G0_REG_DEVICE_ID					0x40015800	//RM0444 / page1355
+#define STM32_REG_DEVICE_ID_1					0x40015800	//For STM32 C0, G0, U0
+#define STM32_REG_DEVICE_ID_2					0x5C001000	//For STM32 H7
 
 /**
   ******************************************************************************
@@ -80,6 +85,15 @@
 #define STM32G0_DEV_ID_0x460					0x460		//STM32G070xx, STM32G071xx and STM32G081xx
 #define STM32G0_DEV_ID_0x456					0x456		//STM32G050xx, STM32G051xx and STM32G061xx
 #define STM32G0_DEV_ID_0x466					0x466		//STM32G030xx, STM32G031xx and STM32G041xx
+
+
+/**
+  ******************************************************************************
+  * STM32C0 Device Specific define
+  ******************************************************************************
+**/
+#define STM32U0_DEV_ID_0x459					0x459		//STM32U031xx
+#define STM32U0_DEV_ID_0x489					0x489		//STM32U073xx/083xx
 
 /**
   ******************************************************************************

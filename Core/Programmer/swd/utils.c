@@ -245,9 +245,8 @@ void waitForRegReady(void)
  **********************************************************/
 bool verifyDpId(uint32_t dpId)
 {
-    if (dpId == STM32C0_SWDP_ID ||
-        dpId == STM32H7_SWDP_ID ||
-        dpId == STM32G0_SWDP_ID)
+    if (dpId == STM32_SWDP_ID_1 ||
+        dpId == STM32_SWDP_ID_2)
     {
         return true;
     }
@@ -262,6 +261,7 @@ bool verifyAhbApId(uint32_t apId)
 {
     if (apId == STM32C0_AHBAP_ID ||
         apId == STM32H7_AHBAP_ID ||
+		apId == STM32U0_AHBAP_ID ||
         apId == STM32G0_AHBAP_ID)
     {
         return true;
