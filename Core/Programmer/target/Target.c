@@ -2,8 +2,6 @@
 #include <main.h>
 #include <inttypes.h>
 #include "Target.h"
-#include "stm32c0_flash.h"
-#include "stm32h7_flash.h"
 #include "FileTransferCheck.h"
 #include "usbd_core.h"
 #include "led.h"
@@ -15,6 +13,11 @@
 #include "swd\delay.h"
 #include "util\ihex_parser.h"
 #include "swd\utils.h"
+
+#include "stm32c0_flash.h"
+#include "stm32h7_flash.h"
+#include "stm32u0_flash.h"
+
 
 Target_InfoTypeDef target;
 extern UART_HandleTypeDef huart1;
@@ -66,9 +69,10 @@ void log_message(const char *format, ...)
 #define TO_BE_IMPLEMENT_CALLBACK 0
 static bool Target_ProgramCallback_STM32H7(uint32_t addr, const uint8_t *buf, uint8_t bufsize);
 static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, uint8_t bufsize);
+static bool Target_ProgramCallback_STM32U0(uint32_t addr, const uint8_t *buf, uint8_t bufsize);
 static bool (*Target_ProgramCallback[])(uint32_t addr, const uint8_t *buf, uint8_t bufsize)={\
 					TO_BE_IMPLEMENT_CALLBACK,\
-					TO_BE_IMPLEMENT_CALLBACK,\
+					Target_ProgramCallback_STM32U0,\
 					TO_BE_IMPLEMENT_CALLBACK,\
 					TO_BE_IMPLEMENT_CALLBACK,\
 					TO_BE_IMPLEMENT_CALLBACK,\
@@ -477,6 +481,44 @@ static bool Target_ProgramBin_STM32C0(uint32_t start_address, const uint8_t *dat
     return TARGET_OK;
 }
 
+static bool Target_ProgramBin_STM32U0(uint32_t start_address, const uint8_t *data, uint32_t data_size)
+{
+    uint32_t address = start_address;
+    uint32_t chunk_size = 8; // 64비트 단위로 프로그래밍
+    uint32_t remaining_size = data_size;
+
+    while (remaining_size > 0)
+    {
+        // 현재 청크 크기를 결정 (남은 데이터가 8바이트보다 적으면 남은 만큼만 처리)
+        uint64_t word = 0xFFFFFFFFFFFFFFFF;  // 기본 패딩 값 0xFF로 초기화
+        uint32_t size_to_program = (remaining_size >= chunk_size) ? chunk_size : remaining_size;
+
+        // 데이터 복사 (패딩 필요 시 0xFF로 유지됨)
+        memcpy(&word, data, size_to_program);
+#ifdef DEBUG_USE_BIN_PROG_PRINT
+        // 주소와 데이터 출력 (데이터는 바이트 단위로)
+        log_message("STM32U0 Flash: Address 0x%08lX, Data: ", address);
+        for (uint32_t i = 0; i < size_to_program; i++) {
+        	printf("%02" PRIX16 " ", data[i]);
+        }
+        printf("\n");
+#endif
+        // Stm32c0_Flash_Program 호출
+        if (Stm32u0_Flash_Program(address, word) != TARGET_OK)
+        {
+          log_message("Error: Failed to program STM32U0 flash at address 0x%08lX\n", address);
+          Stm32u0_Flash_Lock();
+          return TARGET_ERROR;
+        }
+
+        // 다음 주소 및 남은 크기 갱신
+        address += chunk_size;
+        data += size_to_program;
+        remaining_size -= size_to_program;
+    }
+    return TARGET_OK;
+}
+
 
 /* Function to program BIN files */
 static bool Target_ProgramBin(void)
@@ -552,7 +594,14 @@ static bool Target_ProgramBin(void)
 									 return TARGET_ERROR;
                 }
                 break;
-
+            case TARGET_STM32U0:
+                if (Target_ProgramBin_STM32U0(address, fbuf, readcount) != TARGET_OK)
+                {
+									 log_message("Error: STM32U0 programming failed\n");
+									 f_close(&file);
+									 return TARGET_ERROR;
+                }
+                break;
             case TARGET_STM32H7:
                 if (Target_ProgramBin_STM32H7(address, fbuf, readcount) != TARGET_OK)
                 {
@@ -616,7 +665,7 @@ static bool Target_FlashEmptyCheck(void)
     if ((readMem(startAddr) == 0xFFFFFFFF) &&
         (readMem(startAddr + 4) == 0xFFFFFFFF))
     {
-    		log_message("Flash empty check: Empty.\n");
+    	log_message("Flash empty check: Empty.\n");
         return TARGET_OK; // EMPTY 상태
     }
     else
@@ -631,6 +680,18 @@ static void Target_MassErase_STM32C0(void)
     Stm32c0_Flash_Unlock();
     Stm32c0_Flash_MassErase();
     Stm32c0_Flash_Lock();
+}
+
+static void Target_MassErase_STM32U0(void)
+{
+    Stm32u0_Flash_Unlock();
+    Stm32u0_Flash_MassErase();
+    Stm32u0_Flash_Lock();
+}
+
+static void Target_MassErase_STM32G0(void)
+{
+	/* Not Implement */
 }
 
 static void Target_MassErase_STM32H7(bool isDualBank)
@@ -659,12 +720,10 @@ static bool Target_MassErase(void)
     log_message("Target MassErase\n");
     switch(target.TargetFamily)
     {
-        case TARGET_STM32C0:
-        		Target_MassErase_STM32C0();
-            break;
-        case TARGET_STM32H7:
-        		Target_MassErase_STM32H7(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK);
-            break;
+        case TARGET_STM32C0: Target_MassErase_STM32C0(); break;
+        case TARGET_STM32U0: Target_MassErase_STM32U0(); break;
+        case TARGET_STM32G0: Target_MassErase_STM32G0(); break;
+        case TARGET_STM32H7: Target_MassErase_STM32H7(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK); break;
         default:
             log_message("Unsupported Target Family for Mass Erase\n");
             return TARGET_ERROR;
@@ -700,6 +759,38 @@ static bool Target_ProgramCallback_STM32C0(uint32_t addr, const uint8_t *buf, ui
 		if (status != TARGET_OK)
 		{
 			Stm32c0_Flash_Lock();
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool Target_ProgramCallback_STM32U0(uint32_t addr, const uint8_t *buf, uint8_t bufsize)
+{
+	uint64_t tmp;
+	bool status = true;
+
+	/* Flash programming double word */
+	for (uint32_t i = 0; i < bufsize; i += 8)
+	{
+		// tmp 초기화하여 0xFF으로 채움
+		tmp = 0xFFFFFFFFFFFFFFFF;
+
+		// 남은 바이트가 8바이트 미만일 경우, 전체를 0xFF으로 패딩 처리
+		if (bufsize - i >= 8)
+		{
+			// 8바이트 단위로 변환
+			tmp = ((uint64_t*)(&buf[i]))[0];
+		} else {
+			// 남은 바이트만 복사하고 나머지 부분은 0xFF로 유지
+			memcpy(&tmp, &buf[i], bufsize - i);
+		}
+
+		// Double word 프로그래밍
+		status = Stm32u0_Flash_Program(addr + i, tmp);
+		if (status != TARGET_OK)
+		{
+			Stm32u0_Flash_Lock();
 			return false;
 		}
 	}
@@ -1097,6 +1188,7 @@ static bool Target_Protection_Unlock_STM32H7(void)
 
     return TARGET_OK;
 }
+
 /* Function to unlock protection for STM32C0 */
 static bool Target_Protection_Unlock_STM32C0(void)
 {
@@ -1138,6 +1230,55 @@ static bool Target_Protection_Unlock_STM32C0(void)
     return TARGET_OK;
 }
 
+/* Function to unlock protection for STM32U0 */
+static bool Target_Protection_Unlock_STM32U0(void)
+{
+    uint32_t Option_Status = 0;
+
+    /* Read option byte */
+    Option_Status = readMem(STM32U0_FLASH_OPTION_OPTR) & STM32U0_FLASH_OPTR_RDP_Msk;
+    log_message("Current target RDP = 0x%02" PRIX32 "\n", Option_Status);
+
+    /* If option byte Level 1 */
+    if(Option_Status == STM32U0_OB_RDP_LEVEL_1)
+    {
+        log_message("Configure target RDP Level-1(0xBB) to Level-0(0xAA) for flash programming.\n");
+
+        /* Unlock */
+        Stm32u0_Flash_Unlock();
+        Stm32u0_Flash_OB_Unlock();
+        Stm32u0_Flash_OB_Program(STM32U0_OB_RDP_LEVEL_0);
+        log_message("RDP programming OK.\n");
+        Stm32u0_Flash_OB_Launch();
+        Target_Connect();
+        Stm32u0_Flash_OB_Lock();
+        Stm32u0_Flash_Lock();
+
+        Option_Status = readMem(STM32U0_FLASH_OPTION_OPTR);
+        log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32U0_FLASH_OPTR_RDP_Msk);
+    }
+    else if(Option_Status == STM32U0_OB_RDP_LEVEL_0)
+    {
+        log_message("No need to configure RDP Level.\n");
+    }
+    else // if(Option_Status == STM32C0_OB_RDP_LEVEL_2)
+    {
+        log_message("Locked chip or Error, it cannot program.\n");
+        return TARGET_ERROR;
+    }
+
+    return TARGET_OK;
+}
+
+/* Function to unlock protection for STM32G0 */
+static bool Target_Protection_Unlock_STM32G0(void)
+{
+    return TARGET_OK;
+}
+
+
+
+
 /* Main function to unlock protection */
 static bool Target_Protection_Unlock(void)
 {
@@ -1145,15 +1286,13 @@ static bool Target_Protection_Unlock(void)
 
     switch(target.TargetFamily)
     {
-        case TARGET_STM32C0:
-        	return Target_Protection_Unlock_STM32C0();
-
-        case TARGET_STM32H7:
-        	return Target_Protection_Unlock_STM32H7();
-
+        case TARGET_STM32C0: return Target_Protection_Unlock_STM32C0();
+        case TARGET_STM32H7: return Target_Protection_Unlock_STM32H7();
+        case TARGET_STM32U0: return Target_Protection_Unlock_STM32U0();
+        case TARGET_STM32G0: return Target_Protection_Unlock_STM32G0();
         default:
             log_message("Target family not supported for protection unlock.\n");
-            break;
+            return TARGET_ERROR;
     }
     return TARGET_OK;
 }
@@ -1171,6 +1310,48 @@ static bool Target_Protection_Lock_STM32C0(void)
     Target_Connect();
     Stm32c0_Flash_OB_Lock();
     Stm32c0_Flash_Lock();
+
+    Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR);
+    log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32C0_FLASH_OPTR_RDP_Msk);
+
+    return TARGET_OK;
+}
+
+/* Function to lock protection for STM32U0 */
+static bool Target_Protection_Lock_STM32U0(void)
+{
+    uint32_t Option_Status = 0;
+
+    log_message("Configuring target RDP Level-0 (0xAA) to Level-1 (0xBB) for flash protection.\n");
+
+    Stm32u0_Flash_Unlock();
+    Stm32u0_Flash_OB_Unlock();
+    Stm32u0_Flash_OB_Program(STM32U0_OB_RDP_LEVEL_1);
+    Stm32u0_Flash_OB_Launch();
+    Target_Connect();
+    Stm32u0_Flash_OB_Lock();
+    Stm32u0_Flash_Lock();
+    Option_Status = readMem(STM32U0_FLASH_OPTION_OPTR);
+    log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32U0_FLASH_OPTR_RDP_Msk);
+
+    return TARGET_OK;
+}
+
+/* Function to lock protection for STM32G0 */
+static bool Target_Protection_Lock_STM32G0(void)
+{
+    uint32_t Option_Status = 0;
+
+    log_message("Configuring target RDP Level-0 (0xAA) to Level-1 (0xBB) for flash protection.\n");
+#if 0
+    Stm32c0_Flash_Unlock();
+    Stm32c0_Flash_OB_Unlock();
+    Stm32c0_Flash_OB_Program(STM32C0_OB_RDP_LEVEL_1);
+    Stm32c0_Flash_OB_Launch();
+    Target_Connect();
+    Stm32c0_Flash_OB_Lock();
+    Stm32c0_Flash_Lock();
+#endif
 
     Option_Status = readMem(STM32C0_FLASH_OPTION_OPTR);
     log_message("Modified RDP = 0x%02" PRIX32 "\n", Option_Status & STM32C0_FLASH_OPTR_RDP_Msk);
@@ -1220,11 +1401,10 @@ static bool Target_Protection_Lock(void)
         switch(target.TargetFamily)
         {
             /* STM32C0 */
-            case TARGET_STM32C0:
-                return Target_Protection_Lock_STM32C0();
-                break;
-            case TARGET_STM32H7:
-            		return Target_Protection_Lock_STM32H7();
+            case TARGET_STM32C0: return Target_Protection_Lock_STM32C0();
+            case TARGET_STM32H7: return Target_Protection_Lock_STM32H7();
+            case TARGET_STM32U0: return Target_Protection_Lock_STM32U0();
+            case TARGET_STM32G0: return Target_Protection_Lock_STM32G0();
             default:
                 log_message("Target family not supported for protection lock.\n");
                 break;
@@ -1257,15 +1437,21 @@ static void Target_FlashUnlock(void)
       case TARGET_STM32C0:
     	  Stm32c0_Flash_Unlock();
     	  break;
+      case TARGET_STM32U0:
+    	  Stm32u0_Flash_Unlock();
+    	  break;
+      case TARGET_STM32G0:
+    	  //Stm32g0_Flash_Unlock();
+    	  break;
       case TARGET_STM32H7:
       		if(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK)
       		{
-						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
-						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
+      			Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+				Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_2);
       		}
       		else
       		{
-						Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
+				Stm32h7_Flash_Unlock(STM32H7_FLASH_BANK_1);
       		}
       		break;
       default:
@@ -1280,9 +1466,8 @@ static void Target_FlashLock(void)
 
   switch(target.TargetFamily)
   {
-      case TARGET_STM32C0:
-      		Stm32c0_Flash_Lock();
-					break;
+      case TARGET_STM32C0: Stm32c0_Flash_Lock(); break;
+      case TARGET_STM32U0: Stm32u0_Flash_Lock(); break;
       case TARGET_STM32H7:
       		if(target.TargetIsDualBank == STM32H7_FLASH_SUPPORT_DUALBANK)
       		{
@@ -1302,6 +1487,7 @@ static void Target_FlashLock(void)
 
 void Target_MainLoop(void)
 {
+	static bool b_USBConnection = false;
 	bool status = TARGET_ERROR;
 
 	int u32_StartTime = 0;
@@ -1314,10 +1500,14 @@ void Target_MainLoop(void)
 	//FileTransferCheck();
 
 	/* Button programming start */
-	if(Button_WasPressed() == 1)
+	if(Button_WasPressed() == true)
 	{
-		/* USB Disconnection */
-		USBD_DeInit(&hUsbDeviceFS);
+		/* USB disconnection only once for SD Card USB MSC & FatFS software stack confliction. */
+		if(b_USBConnection == false)
+		{
+			USBD_DeInit(&hUsbDeviceFS);
+			b_USBConnection = true;
+		}
 
 		LED_SetState(TARGET_LED_STAT_PROGRAMMING);
 		Buzzer_SetState(BUZZER_PROG_START);
@@ -1336,7 +1526,7 @@ void Target_MainLoop(void)
 		status = Target_FlashEmptyCheck();
 		if (status == TARGET_OK)
 		{
-			log_message("Flash is empty after RDP unlock. Skipping mass erase.\n");
+			log_message("Flash is empty. Skipping mass erase.\n");
 		}
 		else
 		{
