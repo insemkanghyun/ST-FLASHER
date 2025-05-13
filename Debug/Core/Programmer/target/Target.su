@@ -1,0 +1,13 @@
+../Core/Programmer/target/Target.c:915:13:Target_ProgramCallback_STM32H7	16	static
+../Core/Programmer/target/Target.c:850:13:Target_ProgramCallback_STM32C0	40	static
+../Core/Programmer/target/Target.c:882:13:Target_ProgramCallback_STM32U0	40	static
+../Core/Programmer/target/Target.c:28:1:__io_putchar	16	static
+../Core/Programmer/target/Target.c:34:6:log_message	352	static
+../Core/Programmer/target/Target.c:389:13:Target_Connect	8	static
+../Core/Programmer/target/Target.c:92:17:Target_GetFlashStartAddress	8	static
+../Core/Programmer/target/Target.c:742:13:Target_Program	1464	static
+../Core/Programmer/target/Target.c:980:13:Target_VerifyCallback	104	static
+../Core/Programmer/target/Target.c:1230:13:Target_Verify	1408	static
+../Core/Programmer/target/Target.c:1501:13:Target_Protection_Lock	288	static
+../Core/Programmer/target/Target.c:1535:13:Target_ErrorHandle	8	static
+../Core/Programmer/target/Target.c:1602:6:Target_MainLoop	16	static

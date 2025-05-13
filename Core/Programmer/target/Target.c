@@ -177,6 +177,28 @@ static void Target_GetDviceInfo_STM32G0(Target_InfoTypeDef *target)
     }
 }
 
+static void Target_GetDviceInfo_STM32G4(Target_InfoTypeDef *target)
+{
+    target->TargetFamily = TARGET_STM32G4;
+    target->TargetDevId = readMem(STM32_REG_DEVICE_ID_3) & 0xFFF;
+    log_message("Device Identified: STM32G4, Device ID: 0x%03X\n",  target->TargetDevId);
+    switch(target->TargetDevId)
+    {
+        case STM32G4_DEV_ID_0x468:
+            log_message("Category 2 STM32G431, STM32G441(AES)\n");
+            break;
+        case STM32G4_DEV_ID_0x469:
+            log_message("Category 3 STM32G471, STM32G473, STM32G474, STM32G483(AES), STM32G484(AES)\n");
+            break;
+        case STM32G4_DEV_ID_0x479:
+            log_message("Category 4 STM32G491, STM32G4A1(AES)\n");
+            break;
+        default:
+            log_message("Unknown STM32G4 Device ID: 0x%03X\n", target->TargetDevId);
+            break;
+    }
+}
+
 static void Target_GetDviceInfo_STM32H7(Target_InfoTypeDef *target)
 {
     target->TargetFamily = TARGET_STM32H7;
@@ -207,7 +229,7 @@ static void Target_GetDviceInfo_STM32H7(Target_InfoTypeDef *target)
             break;
     }
 }
-
+#if 0
 static void Target_GetInfo(Target_InfoTypeDef *target)
 {
     uint32_t deviceId;
@@ -266,11 +288,103 @@ static void Target_GetInfo(Target_InfoTypeDef *target)
         }
     }
 
+    // Device ID 레지스터 3 프로빙: STM32G4
+    deviceId = readMem(STM32_REG_DEVICE_ID_3) & 0xFFF;
+    if (deviceId != 0) // 유효한 Device ID인지 확인
+    {
+        switch (deviceId)
+        {
+            case STM32G4_DEV_ID_0x468: //Category 2 STM32G431, STM32G441(AES)
+            case STM32G4_DEV_ID_0x469: //Category 3 STM32G471, STM32G473, STM32G474, STM32G483(AES), STM32G484(AES)
+            case STM32G4_DEV_ID_0x479: //Category 4 STM32G491, STM32G4A1(AES)
+                Target_GetDviceInfo_STM32G4(target);
+                return;
+
+            default:
+                log_message("Unknown Device ID from REG_DEVICE_ID_3: 0x%03X\n", deviceId);
+                return;
+        }
+    }
+
     // 알 수 없는 디바이스
     log_message("Unknown Device: No matching Device ID found.\n");
     target->TargetFamily = 0; // Unknown family
     target->TargetDevId = 0;
 }
+#else
+static void Target_GetInfo(Target_InfoTypeDef *target)
+{
+    uint32_t deviceId, swdpId;
+
+    // Step 1: SW-DP ID 읽기 (MCU 종류 식별)
+    swdpId = target->TargetDpId;
+
+    // Step 2: SW-DP ID를 기반으로 Device ID 레지스터 설정
+    if (swdpId == STM32_SWDP_ID_3) // STM32G4
+    {
+        deviceId = readMem(STM32_REG_DEVICE_ID_3) & 0xFFF;
+    }
+    else if (swdpId == STM32_SWDP_ID_2) // STM32H7
+    {
+        deviceId = readMem(STM32_REG_DEVICE_ID_2) & 0xFFF;
+    }
+    else if (swdpId == STM32_SWDP_ID_1) // STM32C0, STM32G0, STM32U0
+    {
+        deviceId = readMem(STM32_REG_DEVICE_ID_1) & 0xFFF;
+    }
+    else
+    {
+        log_message("Unknown SW-DP ID: 0x%08X\n", swdpId);
+        target->TargetFamily = 0; // Unknown family
+        target->TargetDevId = 0;
+        return;
+    }
+
+	switch (deviceId)
+	{
+		case STM32C0_DEV_ID_0x443: // STM32C011xx
+		case STM32C0_DEV_ID_0x453: // STM32C031xx
+		case STM32C0_DEV_ID_0x44C: // STM32C051xx
+		case STM32C0_DEV_ID_0x493: // STM32C071xx
+		case STM32C0_DEV_ID_0x44D: // STM32C091xx/92xx
+			Target_GetDviceInfo_STM32C0(target);
+			return;
+
+		case STM32G0_DEV_ID_0x467: // STM32G0B0xx, STM32G0B1xx, STM32G0C1xx
+		case STM32G0_DEV_ID_0x460: // STM32G070xx, STM32G071xx, STM32G081xx
+		case STM32G0_DEV_ID_0x456: // STM32G050xx, STM32G051xx, STM32G061xx
+		case STM32G0_DEV_ID_0x466: // STM32G030xx, STM32G031xx, STM32G041xx
+			Target_GetDviceInfo_STM32G0(target);
+			return;
+
+		case STM32U0_DEV_ID_0x459: // STM32U031xx
+		case STM32U0_DEV_ID_0x489: // STM32U073xx/083xx
+			Target_GetDviceInfo_STM32U0(target);
+			return;
+
+		case STM32H7_DEV_ID_0x485: // STM32H7Rx/7Sx
+		case STM32H7_DEV_ID_0x480: // STM32H7A3/7B3/7B0
+		case STM32H7_DEV_ID_0x483: // STM32H72x, STM32H73x
+		case STM32H7_DEV_ID_0x450: // STM32H742, STM32H743/753, STM32H750, STM32H745/755, STM32H747/757
+			Target_GetDviceInfo_STM32H7(target);
+			return;
+
+		case STM32G4_DEV_ID_0x468: //Category 2 STM32G431, STM32G441(AES)
+		case STM32G4_DEV_ID_0x469: //Category 3 STM32G471, STM32G473, STM32G474, STM32G483(AES), STM32G484(AES)
+		case STM32G4_DEV_ID_0x479: //Category 4 STM32G491, STM32G4A1(AES)
+			Target_GetDviceInfo_STM32G4(target);
+			return;
+
+		default:
+		    log_message("Unknown Device: No matching Device ID found.\n");
+		    target->TargetFamily = 0; // Unknown family
+		    target->TargetDevId = 0;
+			return;
+	}
+}
+#endif
+
+
 
 static bool Target_Connect(void)
 {
@@ -1500,8 +1614,15 @@ void Target_MainLoop(void)
 	//FileTransferCheck();
 
 	/* Button programming start */
+
+#ifndef DEBUG_USE_AGING_TEST
 	if(Button_WasPressed() == true)
 	{
+#else
+	if(1)
+	{
+		HAL_Delay(1000);
+#endif
 		/* USB disconnection only once for SD Card USB MSC & FatFS software stack confliction. */
 		if(b_USBConnection == false)
 		{

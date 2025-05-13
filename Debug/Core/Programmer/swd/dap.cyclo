@@ -1,0 +1,13 @@
+../Core/Programmer/swd/dap.c:59:17:readReg	11
+../Core/Programmer/swd/dap.c:170:17:writeReg	13
+../Core/Programmer/swd/dap.c:262:6:JTAG_to_SWD_Sequence	6
+../Core/Programmer/swd/dap.c:303:6:exitDormantState	9
+../Core/Programmer/swd/dap.c:355:6:writeAP	3
+../Core/Programmer/swd/dap.c:382:6:writeDP	3
+../Core/Programmer/swd/dap.c:411:6:writeDpIgnoreAck	3
+../Core/Programmer/swd/dap.c:441:6:readAP	3
+../Core/Programmer/swd/dap.c:468:6:readDP	3
+../Core/Programmer/swd/dap.c:493:10:initDp	2
+../Core/Programmer/swd/dap.c:555:10:readApId	1
+../Core/Programmer/swd/dap.c:580:6:aapExtensionSequence	1
+../Core/Programmer/swd/dap.c:605:6:initAhbAp	1

@@ -1,0 +1,12 @@
+../Core/Programmer/swd/utils.c:49:6:haltTarget	2
+../Core/Programmer/swd/utils.c:72:6:runTarget	1
+../Core/Programmer/swd/utils.c:81:6:stepTarget	1
+../Core/Programmer/swd/utils.c:186:6:hardResetTarget	1
+../Core/Programmer/swd/utils.c:202:10:readMem	1
+../Core/Programmer/swd/utils.c:223:6:writeMem	1
+../Core/Programmer/swd/utils.c:92:6:resetAndHaltTarget	2
+../Core/Programmer/swd/utils.c:136:6:resetTarget	3
+../Core/Programmer/swd/utils.c:234:6:waitForRegReady	2
+../Core/Programmer/swd/utils.c:246:6:verifyDpId	3
+../Core/Programmer/swd/utils.c:262:6:verifyAhbApId	3
+../Core/Programmer/swd/utils.c:280:6:connectToTarget	3

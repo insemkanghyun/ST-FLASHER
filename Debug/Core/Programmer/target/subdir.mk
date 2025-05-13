@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (12.3.rel1)
+# Toolchain: GNU Tools for STM32 (13.3.rel1)
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
@@ -8,6 +8,7 @@ C_SRCS += \
 ../Core/Programmer/target/Target.c \
 ../Core/Programmer/target/stm32c0_flash.c \
 ../Core/Programmer/target/stm32g0_flash.c \
+../Core/Programmer/target/stm32g4_flash.c \
 ../Core/Programmer/target/stm32h7_flash.c \
 ../Core/Programmer/target/stm32u0_flash.c 
 
@@ -15,6 +16,7 @@ OBJS += \
 ./Core/Programmer/target/Target.o \
 ./Core/Programmer/target/stm32c0_flash.o \
 ./Core/Programmer/target/stm32g0_flash.o \
+./Core/Programmer/target/stm32g4_flash.o \
 ./Core/Programmer/target/stm32h7_flash.o \
 ./Core/Programmer/target/stm32u0_flash.o 
 
@@ -22,6 +24,7 @@ C_DEPS += \
 ./Core/Programmer/target/Target.d \
 ./Core/Programmer/target/stm32c0_flash.d \
 ./Core/Programmer/target/stm32g0_flash.d \
+./Core/Programmer/target/stm32g4_flash.d \
 ./Core/Programmer/target/stm32h7_flash.d \
 ./Core/Programmer/target/stm32u0_flash.d 
 
@@ -33,7 +36,7 @@ Core/Programmer/target/%.o Core/Programmer/target/%.su Core/Programmer/target/%.
 clean: clean-Core-2f-Programmer-2f-target
 
 clean-Core-2f-Programmer-2f-target:
-	-$(RM) ./Core/Programmer/target/Target.cyclo ./Core/Programmer/target/Target.d ./Core/Programmer/target/Target.o ./Core/Programmer/target/Target.su ./Core/Programmer/target/stm32c0_flash.cyclo ./Core/Programmer/target/stm32c0_flash.d ./Core/Programmer/target/stm32c0_flash.o ./Core/Programmer/target/stm32c0_flash.su ./Core/Programmer/target/stm32g0_flash.cyclo ./Core/Programmer/target/stm32g0_flash.d ./Core/Programmer/target/stm32g0_flash.o ./Core/Programmer/target/stm32g0_flash.su ./Core/Programmer/target/stm32h7_flash.cyclo ./Core/Programmer/target/stm32h7_flash.d ./Core/Programmer/target/stm32h7_flash.o ./Core/Programmer/target/stm32h7_flash.su ./Core/Programmer/target/stm32u0_flash.cyclo ./Core/Programmer/target/stm32u0_flash.d ./Core/Programmer/target/stm32u0_flash.o ./Core/Programmer/target/stm32u0_flash.su
+	-$(RM) ./Core/Programmer/target/Target.cyclo ./Core/Programmer/target/Target.d ./Core/Programmer/target/Target.o ./Core/Programmer/target/Target.su ./Core/Programmer/target/stm32c0_flash.cyclo ./Core/Programmer/target/stm32c0_flash.d ./Core/Programmer/target/stm32c0_flash.o ./Core/Programmer/target/stm32c0_flash.su ./Core/Programmer/target/stm32g0_flash.cyclo ./Core/Programmer/target/stm32g0_flash.d ./Core/Programmer/target/stm32g0_flash.o ./Core/Programmer/target/stm32g0_flash.su ./Core/Programmer/target/stm32g4_flash.cyclo ./Core/Programmer/target/stm32g4_flash.d ./Core/Programmer/target/stm32g4_flash.o ./Core/Programmer/target/stm32g4_flash.su ./Core/Programmer/target/stm32h7_flash.cyclo ./Core/Programmer/target/stm32h7_flash.d ./Core/Programmer/target/stm32h7_flash.o ./Core/Programmer/target/stm32h7_flash.su ./Core/Programmer/target/stm32u0_flash.cyclo ./Core/Programmer/target/stm32u0_flash.d ./Core/Programmer/target/stm32u0_flash.o ./Core/Programmer/target/stm32u0_flash.su
 
 .PHONY: clean-Core-2f-Programmer-2f-target
 

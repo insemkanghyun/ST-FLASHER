@@ -25,6 +25,7 @@
 **/
 #define STM32_SWDP_ID_1							0x0BC11477	//For STM32 C0, G0
 #define STM32_SWDP_ID_2							0x6BA02477	//For STM32 H7, U0
+#define STM32_SWDP_ID_3							0x2BA01477	//For STM32 G4
 
 /**
   ******************************************************************************
@@ -32,9 +33,10 @@
   ******************************************************************************
 **/
 #define STM32C0_AHBAP_ID  						0x04770031	//?????
-#define STM32H7_AHBAP_ID  						0x84770001	//RM0399 / page3251
 #define STM32G0_AHBAP_ID  						0x04770031	//?????
+#define STM32H7_AHBAP_ID  						0x84770001	//RM0399 / page3251
 #define STM32U0_AHBAP_ID  						0x84770001	//RM0503 / page1260
+#define STM32G4_AHBAP_ID						0x24770011	//?????
 
 /**
   ******************************************************************************
@@ -43,6 +45,7 @@
 **/
 #define STM32_REG_DEVICE_ID_1					0x40015800	//For STM32 C0, G0, U0
 #define STM32_REG_DEVICE_ID_2					0x5C001000	//For STM32 H7
+#define STM32_REG_DEVICE_ID_3					0xE0042000	//For STM32 G4
 
 /**
   ******************************************************************************
@@ -94,6 +97,17 @@
 **/
 #define STM32U0_DEV_ID_0x459					0x459		//STM32U031xx
 #define STM32U0_DEV_ID_0x489					0x489		//STM32U073xx/083xx
+
+
+/**
+  ******************************************************************************
+  * STM32C4 Device Specific define
+  ******************************************************************************
+**/
+#define STM32G4_DEV_ID_0x468					0x468		//Category 2 STM32G431, STM32G441(AES)
+#define STM32G4_DEV_ID_0x469					0x469		//Category 3 STM32G471, STM32G473,STM32G474, STM32G483(AES), STM32G484(AES)
+#define STM32G4_DEV_ID_0x479					0x479		//Category 4 STM32G491, STM32G4A1(AES)
+
 
 /**
   ******************************************************************************

@@ -1,0 +1,13 @@
+../Core/Programmer/swd/dap.c:59:17:readReg	20	static,ignoring_inline_asm
+../Core/Programmer/swd/dap.c:170:17:writeReg	16	static,ignoring_inline_asm
+../Core/Programmer/swd/dap.c:262:6:JTAG_to_SWD_Sequence	12	static,ignoring_inline_asm
+../Core/Programmer/swd/dap.c:303:6:exitDormantState	20	static,ignoring_inline_asm
+../Core/Programmer/swd/dap.c:355:6:writeAP	24	static
+../Core/Programmer/swd/dap.c:382:6:writeDP	24	static
+../Core/Programmer/swd/dap.c:411:6:writeDpIgnoreAck	24	static
+../Core/Programmer/swd/dap.c:441:6:readAP	24	static
+../Core/Programmer/swd/dap.c:468:6:readDP	24	static
+../Core/Programmer/swd/dap.c:493:10:initDp	24	static
+../Core/Programmer/swd/dap.c:555:10:readApId	16	static
+../Core/Programmer/swd/dap.c:580:6:aapExtensionSequence	0	static
+../Core/Programmer/swd/dap.c:605:6:initAhbAp	8	static

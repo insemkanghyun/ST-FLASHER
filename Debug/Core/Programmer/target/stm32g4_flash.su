@@ -1,0 +1,2 @@
+../Core/Programmer/target/stm32g4_flash.c:10:6:Stm32g4_Flash_MassErase	0	static
+../Core/Programmer/target/stm32g4_flash.c:20:6:Stm32g4_Flash_WaitOperation	0	static
