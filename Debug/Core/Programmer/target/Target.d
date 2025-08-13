@@ -59,7 +59,8 @@ Core/Programmer/target/Target.o: ../Core/Programmer/target/Target.c \
  ../Core/Programmer/target/stm32c0_flash.h \
  ../Core/Programmer/target/target.h \
  ../Core/Programmer/target/stm32h7_flash.h \
- ../Core/Programmer/target/stm32u0_flash.h
+ ../Core/Programmer/target/stm32u0_flash.h \
+ ../Core/Programmer/target/stm32g0_flash.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -128,3 +129,4 @@ Core/Programmer/target/Target.o: ../Core/Programmer/target/Target.c \
 ../Core/Programmer/target/target.h:
 ../Core/Programmer/target/stm32h7_flash.h:
 ../Core/Programmer/target/stm32u0_flash.h:
+../Core/Programmer/target/stm32g0_flash.h:

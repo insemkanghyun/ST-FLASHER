@@ -9,9 +9,7 @@
   */
 bool Stm32g4_Flash_MassErase(void)
 {
-	bool status;
-
-	return  status;
+	return  0;
 }
 bool Stm32g4_Flash_Program(uint32_t Address, uint64_t Data);
 bool Stm32g4_Flash_Unlock(void);
@@ -19,10 +17,7 @@ bool Stm32g4_Flash_Lock(void);
 
 bool Stm32g4_Flash_WaitOperation(uint32_t Timeout)
 {
-	  uint32_t error;
-	  uint32_t tmp = 0;
-
-	  return TARGET_OK;
+	  return 0;
 }
 
 bool Stm32g4_Flash_OB_Lock(void);

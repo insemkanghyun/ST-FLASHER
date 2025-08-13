@@ -1,0 +1,10 @@
+../Core/Programmer/target/stm32g0_flash.c:74:6:Stm32g0_Flash_Unlock	8	static
+../Core/Programmer/target/stm32g0_flash.c:126:6:Stm32g0_Flash_WaitOperation	24	static
+../Core/Programmer/target/stm32g0_flash.c:11:6:Stm32g0_Flash_MassErase	8	static
+../Core/Programmer/target/stm32g0_flash.c:36:6:Stm32g0_Flash_Program	24	static
+../Core/Programmer/target/stm32g0_flash.c:100:6:Stm32g0_Flash_Lock	8	static
+../Core/Programmer/target/stm32g0_flash.c:173:6:Stm32g0_Flash_OB_Lock	8	static
+../Core/Programmer/target/stm32g0_flash.c:198:6:Stm32g0_Flash_OB_Unlock	8	static
+../Core/Programmer/target/stm32g0_flash.c:220:10:Stm32g0_Flash_OB_GetRDP	8	static
+../Core/Programmer/target/stm32g0_flash.c:232:6:Stm32g0_Flash_OB_Launch	8	static
+../Core/Programmer/target/stm32g0_flash.c:252:6:Stm32g0_Flash_OB_Program	16	static

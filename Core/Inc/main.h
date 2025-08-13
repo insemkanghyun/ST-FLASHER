@@ -81,7 +81,6 @@ void Error_Handler(void);
 #define SWD_IO_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
 //#define DEBUG_USE_IHEX_DEBUG
 #define DEBUG_USE_BUZZER_SOUND_SMALL
 //#define DEBUG_USE_AGING_TEST
